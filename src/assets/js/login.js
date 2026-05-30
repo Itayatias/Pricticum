@@ -95,7 +95,11 @@ if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage)
       showMessage(`ברוך הבא ${data.user.fullName}! התחברת בהצלחה.`, 'success');
       loginForm.reset();
       setTimeout(() => {
-        if (data.user.role === 'manager' || data.user.role === 'employee') {
+        if (data.user.role === 'manager') {
+          window.location.href = './manager.html';
+          return;
+        }
+        if (data.user.role === 'employee') {
           window.location.href = './staff.html';
           return;
         }

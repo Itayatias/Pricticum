@@ -11,6 +11,17 @@ const staffSkuCount = document.getElementById('staffSkuCount');
 const staffLowStockCount = document.getElementById('staffLowStockCount');
 const staffOutOfStockCount = document.getElementById('staffOutOfStockCount');
 const managerPanel = document.getElementById('managerPanel');
+const inventoryForm = document.getElementById('inventoryForm');
+const inventoryProductId = document.getElementById('inventoryProductId');
+const inventoryProductName = document.getElementById('inventoryProductName');
+const inventoryCategory = document.getElementById('inventoryCategory');
+const inventoryStock = document.getElementById('inventoryStock');
+const inventoryMinStock = document.getElementById('inventoryMinStock');
+const inventoryLocation = document.getElementById('inventoryLocation');
+const inventoryResetBtn = document.getElementById('inventoryResetBtn');
+const inventorySaveBtn = document.getElementById('inventorySaveBtn');
+
+let currentEditProductId = null;
 
 function setStatus(message, type = 'info') {
   if (!staffStatus) return;
@@ -52,10 +63,75 @@ function bindInventoryButtons() {
       adjustStock(button.dataset.productId, delta);
     });
   });
+
+  document.querySelectorAll('[data-edit-inventory]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const item = (window.__inventoryItems || []).find((entry) => entry.productId === button.dataset.editInventory);
+      if (item) loadItemIntoForm(item);
+    });
+  });
+}
+
+function loadItemIntoForm(item) {
+  currentEditProductId = item.productId;
+  if (inventoryProductId) inventoryProductId.value = item.productId;
+  if (inventoryProductName) inventoryProductName.value = item.productName;
+  if (inventoryCategory) inventoryCategory.value = item.category;
+  if (inventoryStock) inventoryStock.value = String(item.stock);
+  if (inventoryMinStock) inventoryMinStock.value = String(item.min_stock);
+  if (inventoryLocation) inventoryLocation.value = item.location || 'מחסן ראשי';
+  if (inventorySaveBtn) inventorySaveBtn.textContent = 'עדכון מוצר';
+  setStatus(`המוצר ${item.productName} נטען לעריכה.`, 'info');
+}
+
+function resetInventoryForm() {
+  currentEditProductId = null;
+  if (inventoryForm) inventoryForm.reset();
+  if (inventoryProductId) inventoryProductId.value = '';
+  if (inventoryProductName) inventoryProductName.value = '';
+  if (inventoryCategory) inventoryCategory.value = 'צבע';
+  if (inventoryStock) inventoryStock.value = '0';
+  if (inventoryMinStock) inventoryMinStock.value = '5';
+  if (inventoryLocation) inventoryLocation.value = 'מחסן ראשי';
+  if (inventorySaveBtn) inventorySaveBtn.textContent = 'שמירת מוצר';
+}
+
+async function upsertInventoryItem(event) {
+  event.preventDefault();
+
+  try {
+    const payload = {
+      userId: authUser.id,
+      productId: String(inventoryProductId?.value || '').trim(),
+      productName: String(inventoryProductName?.value || '').trim(),
+      category: String(inventoryCategory?.value || '').trim(),
+      stock: Number(inventoryStock?.value || 0),
+      minStock: Number(inventoryMinStock?.value || 0),
+      location: String(inventoryLocation?.value || 'מחסן ראשי').trim(),
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/inventory/upsert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save inventory item');
+    }
+
+    clearStatus();
+    resetInventoryForm();
+    await refreshStaffData();
+  } catch (_err) {
+    setStatus('לא ניתן לשמור את פריט המלאי כרגע.', 'danger');
+  }
 }
 
 function renderInventory(items) {
   if (!inventoryTableBody) return;
+
+  window.__inventoryItems = items;
 
   inventoryTableBody.innerHTML = items
     .map((item) => {
@@ -75,6 +151,7 @@ function renderInventory(items) {
               <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="+5" data-product-id="${item.productId}">+5</button>
               <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="-5" data-product-id="${item.productId}">-5</button>
               <button type="button" class="btn btn-dark btn-sm" data-adjust-stock="+1" data-product-id="${item.productId}">+1</button>
+              <button type="button" class="btn btn-outline-primary btn-sm" data-edit-inventory="${item.productId}">ערוך</button>
             </div>
           </td>
         </tr>
@@ -168,6 +245,9 @@ function init() {
   if (managerPanel && authUser.role === 'manager') {
     managerPanel.classList.remove('d-none');
   }
+
+  if (inventoryForm) inventoryForm.addEventListener('submit', upsertInventoryItem);
+  if (inventoryResetBtn) inventoryResetBtn.addEventListener('click', resetInventoryForm);
 
   setStatus('כאן אפשר לעדכן מלאי, לעקוב אחרי תנועות ולהמשיך להרחיב את שכבת הניהול.', 'info');
 

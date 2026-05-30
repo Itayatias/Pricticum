@@ -21,20 +21,25 @@ function getAccountHref() {
   return isInPages ? './account.html' : './pages/account.html';
 }
 
+function getManagerHref() {
+  const isInPages = window.location.pathname.includes('/pages/');
+  return isInPages ? './manager.html' : './pages/manager.html';
+}
+
 function getStaffHref() {
   const isInPages = window.location.pathname.includes('/pages/');
   return isInPages ? './staff.html' : './pages/staff.html';
 }
 
 function getRoleLabel(role) {
-  if (role === 'manager') return 'לוח ניהול';
-  if (role === 'employee') return 'אזור צוות';
+  if (role === 'manager') return 'לוח מנהל';
+  if (role === 'employee') return 'אזור עובדים';
   return 'אזור אישי';
 }
 
 function getDashboardHref(role) {
   if (role === 'manager' || role === 'employee') {
-    return getStaffHref();
+    return role === 'manager' ? getManagerHref() : getStaffHref();
   }
   return getAccountHref();
 }
@@ -120,7 +125,9 @@ function applyLoggedInState(link, user) {
   link.classList.add('fw-semibold');
   link.classList.toggle(
     'active',
-    window.location.pathname.includes('/account.html') || window.location.pathname.includes('/staff.html')
+    window.location.pathname.includes('/account.html') ||
+      window.location.pathname.includes('/staff.html') ||
+      window.location.pathname.includes('/manager.html')
   );
   link.onclick = null;
 }

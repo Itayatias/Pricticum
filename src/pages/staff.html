@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>אזור צוות - נבלט בע״מ</title>
+  <title>אזור עובדים - נבלט בע״מ</title>
 </head>
 
 <body class="font-sans text-gray-800">
@@ -52,8 +52,8 @@
         <div class="bg-light border rounded-4 p-4 p-lg-5">
           <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
             <div>
-              <p class="text-uppercase text-xs fw-semibold text-muted mb-2">אזור צוות</p>
-              <h1 class="display-6 mb-2">ניהול מלאי ותפעול שוטף</h1>
+              <p class="text-uppercase text-xs fw-semibold text-muted mb-2">אזור עובדים</p>
+              <h1 class="display-6 mb-2">ניהול מלאי, מוצרים ותפעול שוטף</h1>
               <p id="staffUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
             </div>
             <div class="d-flex gap-2">
@@ -115,6 +115,48 @@
                   <h2 class="h5 mb-0">תנועות מלאי אחרונות</h2>
                 </div>
                 <ul id="inventoryMovementsList" class="list-unstyled mb-0"></ul>
+              </div>
+              <div class="bg-white border rounded-4 p-4 h-100 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h2 class="h5 mb-0">הוספה / עדכון מוצר</h2>
+                </div>
+                <form id="inventoryForm" class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label">מזהה מוצר</label>
+                    <input id="inventoryProductId" name="productId" class="form-control" placeholder="לדוגמה: paint-roller" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">שם מוצר</label>
+                    <input id="inventoryProductName" name="productName" class="form-control" placeholder="שם המוצר" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">קטגוריה</label>
+                    <select id="inventoryCategory" name="category" class="form-select" required>
+                      <option value="צבע">צבע</option>
+                      <option value="אינסטלציה">אינסטלציה</option>
+                      <option value="חומרי בנייה">חומרי בנייה</option>
+                      <option value="חשמל">חשמל</option>
+                      <option value="כלי עבודה">כלי עבודה</option>
+                      <option value="גינון">גינון</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">מלאי</label>
+                    <input id="inventoryStock" name="stock" type="number" min="0" class="form-control" value="0" required>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">מינימום</label>
+                    <input id="inventoryMinStock" name="minStock" type="number" min="0" class="form-control" value="5" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">מיקום</label>
+                    <input id="inventoryLocation" name="location" class="form-control" value="מחסן ראשי" required>
+                  </div>
+                  <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" id="inventorySaveBtn">שמירת מוצר</button>
+                    <button type="button" class="btn btn-outline-secondary" id="inventoryResetBtn">ניקוי טופס</button>
+                  </div>
+                </form>
               </div>
               <div id="managerPanel" class="bg-white border rounded-4 p-4 h-100 d-none">
                 <h2 class="h5 mb-3">לוח מנהל</h2>

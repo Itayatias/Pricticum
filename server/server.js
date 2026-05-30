@@ -41,6 +41,15 @@ function verifyPassword(password, storedHash) {
   });
 }
 
+async function runDbRun(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function onRun(err) {
+      if (err) return reject(err);
+      resolve(this);
+    });
+  });
+}
+
 function getUserById(userId) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -59,26 +68,30 @@ async function isStaffUser(userId) {
   return user ? ['employee', 'manager'].includes(user.role) : false;
 }
 
-async function seedStaffAccounts() {
-  const staffAccounts = [
-    { fullName: 'מנהל חנות', email: 'manager@nevelat.co.il', password: 'Manager123!', role: 'manager' },
-    { fullName: 'עובד חנות', email: 'employee@nevelat.co.il', password: 'Employee123!', role: 'employee' },
+async function seedDemoAccounts() {
+  const password = '123456';
+  const passwordHash = await hashPassword(password);
+  const demoAccounts = [
+    { fullName: 'מנהל חנות', email: 'manager@nevelat.co.il', role: 'manager' },
+    { fullName: 'עובד חנות', email: 'employee@nevelat.co.il', role: 'employee' },
+    { fullName: 'לקוח קבלן', email: 'customer1@nevelat.co.il', role: 'customer' },
+    { fullName: 'לקוחה פרטית', email: 'customer2@nevelat.co.il', role: 'customer' },
+    { fullName: 'לקוח עסקי', email: 'customer3@nevelat.co.il', role: 'customer' },
   ];
 
-  for (const account of staffAccounts) {
-    // Avoid reseeding if the account already exists.
+  for (const account of demoAccounts) {
+    // Keep demo accounts stable across runs so the dashboards are always usable.
     // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => {
-      db.get('SELECT id FROM users WHERE email = ?', [account.email], async (err, row) => {
-        if (err || row) return resolve();
-        const passwordHash = await hashPassword(account.password);
-        db.run(
-          'INSERT INTO users (full_name, email, password_hash, password_plain, role) VALUES (?, ?, ?, ?, ?)',
-          [account.fullName, account.email, passwordHash, account.password, account.role],
-          () => resolve()
-        );
-      });
-    });
+    await runDbRun(
+      `INSERT INTO users (full_name, email, password_hash, password_plain, role)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(email) DO UPDATE SET
+         full_name = excluded.full_name,
+         password_hash = excluded.password_hash,
+         password_plain = excluded.password_plain,
+         role = excluded.role`,
+      [account.fullName, account.email, passwordHash, password, account.role]
+    );
   }
 }
 
@@ -98,6 +111,13 @@ app.get('/api/users', (_req, res) => {
     }
   );
 });
+
+async function authorizeUser(userId, allowedRoles) {
+  const user = await getUserById(userId);
+  if (!user) return null;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return null;
+  return user;
+}
 
 app.post('/api/auth/register', async (req, res) => {
   const { fullName, email, password } = req.body || {};
@@ -381,7 +401,7 @@ app.post('/api/cart/checkout', (req, res) => {
                   );
                 });
               });
-            });
+            }
           );
         }
       );
@@ -450,6 +470,177 @@ app.get('/api/inventory/public', (_req, res) => {
   );
 });
 
+app.get('/api/admin/dashboard', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await authorizeUser(userId, ['manager']);
+    if (!user) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.get(
+      `SELECT
+         COUNT(*) AS totalUsers,
+         SUM(CASE WHEN role = 'customer' THEN 1 ELSE 0 END) AS customerCount,
+         SUM(CASE WHEN role = 'employee' THEN 1 ELSE 0 END) AS employeeCount,
+         SUM(CASE WHEN role = 'manager' THEN 1 ELSE 0 END) AS managerCount
+       FROM users`,
+      [],
+      (usersErr, userStats) => {
+        if (usersErr) return res.status(500).json({ message: 'Failed to load user stats' });
+
+        db.get(
+          `SELECT
+             COUNT(*) AS totalOrders,
+             COALESCE(SUM(total_amount), 0) AS totalRevenue
+           FROM orders`,
+          [],
+          (ordersErr, orderStats) => {
+            if (ordersErr) return res.status(500).json({ message: 'Failed to load order stats' });
+
+            db.get(
+              `SELECT
+                 COUNT(*) AS totalItems,
+                 SUM(CASE WHEN stock <= 0 THEN 1 ELSE 0 END) AS outOfStockCount,
+                 SUM(CASE WHEN stock > 0 AND stock <= min_stock THEN 1 ELSE 0 END) AS lowStockCount
+               FROM inventory_items`,
+              [],
+              (inventoryErr, inventoryStats) => {
+                if (inventoryErr) return res.status(500).json({ message: 'Failed to load inventory stats' });
+
+                db.all(
+                  `SELECT id, total_amount AS totalAmount, created_at AS createdAt
+                   FROM orders
+                   ORDER BY id DESC
+                   LIMIT 5`,
+                  [],
+                  (recentOrdersErr, recentOrders) => {
+                    if (recentOrdersErr) return res.status(500).json({ message: 'Failed to load recent orders' });
+
+                    db.all(
+                      `SELECT product_id AS productId, product_name AS productName, category, stock, min_stock AS minStock, location
+                       FROM inventory_items
+                       ORDER BY stock ASC, product_name ASC
+                       LIMIT 10`,
+                      [],
+                      (criticalErr, criticalStock) => {
+                        if (criticalErr) return res.status(500).json({ message: 'Failed to load critical stock items' });
+
+                        return res.json({
+                          users: userStats,
+                          orders: orderStats,
+                          inventory: inventoryStats,
+                          recentOrders,
+                          criticalStock,
+                        });
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await authorizeUser(userId, ['manager']);
+    if (!user) return res.status(403).json({ message: 'Not authorized' });
+
+    db.all(
+      `SELECT id, full_name AS fullName, email, role, password_plain AS password, created_at AS createdAt
+       FROM users
+       ORDER BY id DESC`,
+      [],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Failed to fetch users' });
+        return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.post('/api/admin/users/:id', async (req, res) => {
+  const targetId = Number(req.params.id);
+  const { userId, fullName, email, role, password } = req.body || {};
+  const numericUserId = Number(userId);
+
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    return res.status(400).json({ message: 'Valid user id is required' });
+  }
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await authorizeUser(numericUserId, ['manager']);
+    if (!user) return res.status(403).json({ message: 'Not authorized' });
+
+    const fields = [];
+    const values = [];
+
+    if (fullName) {
+      fields.push('full_name = ?');
+      values.push(String(fullName).trim());
+    }
+    if (email) {
+      fields.push('email = ?');
+      values.push(String(email).trim().toLowerCase());
+    }
+    if (role && ['customer', 'employee', 'manager'].includes(role)) {
+      fields.push('role = ?');
+      values.push(role);
+    }
+
+    if (password) {
+      const passwordHash = await hashPassword(String(password));
+      fields.push('password_hash = ?');
+      values.push(passwordHash);
+      fields.push('password_plain = ?');
+      values.push(String(password));
+    }
+
+    if (!fields.length) {
+      return res.status(400).json({ message: 'No fields provided to update' });
+    }
+
+    values.push(targetId);
+    db.run(
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      values,
+      function onUpdate(err) {
+        if (err) {
+          if (err.message && err.message.includes('UNIQUE constraint failed')) {
+            return res.status(409).json({ message: 'Email already exists' });
+          }
+          return res.status(500).json({ message: 'Failed to update user' });
+        }
+        if (this.changes === 0) return res.status(404).json({ message: 'User not found' });
+        return res.json({ message: 'User updated successfully' });
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
 app.get('/api/inventory', async (req, res) => {
   const userId = Number(req.query.userId);
   if (!Number.isInteger(userId) || userId <= 0) {
@@ -498,6 +689,75 @@ app.get('/api/inventory/movements', async (req, res) => {
       (err, rows) => {
         if (err) return res.status(500).json({ message: 'Failed to fetch inventory movements' });
         return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.post('/api/inventory/upsert', async (req, res) => {
+  const { userId, productId, productName, category, stock, minStock, location } = req.body || {};
+  const numericUserId = Number(userId);
+  const numericStock = Number(stock);
+  const numericMinStock = Number(minStock);
+
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!productId || !productName || !category) {
+    return res.status(400).json({ message: 'productId, productName and category are required' });
+  }
+  if (!Number.isInteger(numericStock) || numericStock < 0) {
+    return res.status(400).json({ message: 'Stock must be a non-negative integer' });
+  }
+  if (!Number.isInteger(numericMinStock) || numericMinStock < 0) {
+    return res.status(400).json({ message: 'minStock must be a non-negative integer' });
+  }
+
+  try {
+    const user = await authorizeUser(numericUserId, ['employee', 'manager']);
+    if (!user) return res.status(403).json({ message: 'Not authorized' });
+
+    db.run(
+      `INSERT INTO inventory_items (product_id, product_name, category, stock, min_stock, location, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(product_id) DO UPDATE SET
+         product_name = excluded.product_name,
+         category = excluded.category,
+         stock = excluded.stock,
+         min_stock = excluded.min_stock,
+         location = excluded.location,
+         updated_at = CURRENT_TIMESTAMP`,
+      [
+        String(productId).trim(),
+        String(productName).trim(),
+        String(category).trim(),
+        numericStock,
+        numericMinStock,
+        String(location || 'מחסן ראשי').trim(),
+      ],
+      function onUpsert(err) {
+        if (err) return res.status(500).json({ message: 'Failed to save inventory item' });
+
+        db.run(
+          `INSERT INTO inventory_movements (product_id, user_id, delta, reason)
+           VALUES (?, ?, ?, ?)`,
+          [String(productId).trim(), numericUserId, 0, 'עדכון פרטי מוצר'],
+          () => {}
+        );
+
+        return res.status(201).json({
+          message: 'Inventory item saved successfully',
+          item: {
+            productId: String(productId).trim(),
+            productName: String(productName).trim(),
+            category: String(category).trim(),
+            stock: numericStock,
+            minStock: numericMinStock,
+            location: String(location || 'מחסן ראשי').trim(),
+          },
+        });
       }
     );
   } catch (_err) {
@@ -564,7 +824,7 @@ app.post('/api/inventory/adjust', async (req, res) => {
 
 async function bootstrap() {
   try {
-    await seedStaffAccounts();
+    await seedDemoAccounts();
   } catch (_err) {
     // Seeding failure should not block the application startup.
   }
