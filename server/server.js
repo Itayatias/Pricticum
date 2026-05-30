@@ -47,7 +47,9 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/users', (_req, res) => {
   db.all(
-    'SELECT id, full_name AS fullName, email, created_at AS createdAt FROM users ORDER BY id DESC',
+    `SELECT id, full_name AS fullName, email, password_plain AS password, created_at AS createdAt
+     FROM users
+     ORDER BY id DESC`,
     [],
     (err, rows) => {
       if (err) return res.status(500).json({ message: 'Failed to fetch users' });
@@ -71,8 +73,8 @@ app.post('/api/auth/register', async (req, res) => {
     const passwordHash = await hashPassword(String(password));
 
     db.run(
-      'INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)',
-      [String(fullName).trim(), String(email).trim().toLowerCase(), passwordHash],
+      'INSERT INTO users (full_name, email, password_hash, password_plain) VALUES (?, ?, ?, ?)',
+      [String(fullName).trim(), String(email).trim().toLowerCase(), passwordHash, String(password)],
       function onInsert(err) {
         if (err) {
           if (err.message && err.message.includes('UNIQUE constraint failed')) {
@@ -104,15 +106,23 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   db.get(
-    'SELECT id, full_name AS fullName, email, password_hash AS passwordHash FROM users WHERE email = ?',
+    `SELECT id, full_name AS fullName, email, password_hash AS passwordHash, password_plain AS passwordPlain
+     FROM users
+     WHERE email = ?`,
     [String(email).trim().toLowerCase()],
     async (err, row) => {
       if (err) return res.status(500).json({ message: 'Failed to login' });
       if (!row) return res.status(401).json({ message: 'Invalid email or password' });
 
       try {
-        const isValid = await verifyPassword(String(password), row.passwordHash);
+        const isPlainMatch = row.passwordPlain && String(password) === String(row.passwordPlain);
+        const isHashMatch = await verifyPassword(String(password), row.passwordHash);
+        const isValid = Boolean(isPlainMatch || isHashMatch);
         if (!isValid) return res.status(401).json({ message: 'Invalid email or password' });
+
+        if (!row.passwordPlain && isHashMatch) {
+          db.run('UPDATE users SET password_plain = ? WHERE id = ?', [String(password), row.id]);
+        }
 
         return res.json({
           message: 'Login successful',

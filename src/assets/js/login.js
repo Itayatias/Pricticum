@@ -7,6 +7,9 @@ const showRegisterBtn = document.getElementById('showRegisterBtn');
 const authMessage = document.getElementById('authMessage');
 
 if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage) {
+  const authUserRaw = localStorage.getItem('authUser');
+  const authUser = authUserRaw ? JSON.parse(authUserRaw) : null;
+
   const showMessage = (text, type = 'success') => {
     authMessage.textContent = text;
     authMessage.className = `alert alert-${type}`;
@@ -29,6 +32,10 @@ if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage)
 
   showLoginBtn.addEventListener('click', () => switchMode('login'));
   showRegisterBtn.addEventListener('click', () => switchMode('register'));
+
+  if (authUser && authUser.fullName) {
+    showMessage(`אתה כבר מחובר כ-${authUser.fullName}. אפשר להמשיך לקטלוג המוצרים.`, 'info');
+  }
 
   registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -87,6 +94,9 @@ if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage)
       localStorage.setItem('authUser', JSON.stringify(data.user));
       showMessage(`ברוך הבא ${data.user.fullName}! התחברת בהצלחה.`, 'success');
       loginForm.reset();
+      setTimeout(() => {
+        window.location.href = './products.html';
+      }, 700);
     } catch (_err) {
       showMessage('לא ניתן להתחבר לשרת ההתחברות. ודא שהשרת רץ.', 'danger');
     }

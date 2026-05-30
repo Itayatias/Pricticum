@@ -17,9 +17,13 @@ db.serialize(() => {
       full_name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      password_plain TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Backward-compatible migration for existing databases.
+  db.run('ALTER TABLE users ADD COLUMN password_plain TEXT', () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS cart_items (
