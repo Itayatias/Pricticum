@@ -12,7 +12,7 @@ function getAuthUser() {
 }
 
 function formatMoney(amount) {
-  return `$${Number(amount || 0).toFixed(2)}`;
+  return `₪ ${Number(amount || 0).toFixed(2)}`;
 }
 
 function ensureModalElement() {
@@ -33,7 +33,7 @@ function ensureModalElement() {
             <ul id="globalCartItems" class="list-unstyled mb-3"></ul>
             <div class="d-flex justify-content-between fw-semibold">
               <span>סה"כ לתשלום</span>
-              <span id="globalCartTotal">$0.00</span>
+              <span id="globalCartTotal">₪ 0.00</span>
             </div>
           </div>
           <div class="modal-footer">

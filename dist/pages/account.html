@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>אזור אישי - נבלט בע״מ</title>
+  <script type="module" crossorigin src="../assets/js/pages/account.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/js/main.js">
+  <link rel="stylesheet" crossorigin href="../assets/css/main.css">
+</head>
+
+<body class="font-sans text-gray-800">
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="../index.html">
+        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid"
+              style="max-height: 50px;"></span>
+        </span>
+      </a>
+
+      <div class="mx-auto d-lg-block d-none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html">דף הבית</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">אודות</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="products.html">מוצרים</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="testimonials.html">המלצות</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contact.html">צור קשר</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="login.html">התחבר</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center gap-4">
+        <a href="products.html#cart-section"
+          class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link"
+          data-bs-toggle="tooltip" data-bs-placement="bottom" title="מעבר לסל הקניות שלך">
+          <span><i class="bi bi-cart3"></i></span>
+          <span>סל לקוח: <span class="header-cart-count">0</span></span>
+        </a>
+        <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list"
+            viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+              d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="py-lg-8 py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <div class="bg-light border rounded-4 p-4 p-lg-5">
+              <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
+                <div>
+                  <p class="text-uppercase text-xs fw-semibold text-muted mb-2">אזור אישי</p>
+                  <h1 class="display-6 mb-2">ניהול הזמנות וסל הקניות</h1>
+                  <p id="accountUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
+                </div>
+                <div class="d-flex gap-2">
+                  <a href="products.html" class="btn btn-outline-dark">חזרה למוצרים</a>
+                  <button id="accountCheckoutBtn" class="btn btn-dark" type="button" data-bs-toggle="tooltip"
+                    data-bs-placement="bottom" title="ביצוע הזמנה מהסל המעודכן">ביצוע הזמנה</button>
+                </div>
+              </div>
+
+              <div id="accountStatus" class="alert alert-info d-none mb-4" role="alert"></div>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                  <div class="bg-white border rounded-4 p-4 h-100">
+                    <div class="text-muted small mb-1">פריטים בסל</div>
+                    <div id="accountCartCount" class="display-6 fw-semibold">0</div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="bg-white border rounded-4 p-4 h-100">
+                    <div class="text-muted small mb-1">סכום סל</div>
+                    <div id="accountCartTotalSummary" class="display-6 fw-semibold">₪ 0.00</div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="bg-white border rounded-4 p-4 h-100">
+                    <div class="text-muted small mb-1">הזמנות שבוצעו</div>
+                    <div id="accountOrdersCount" class="display-6 fw-semibold">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-lg-6">
+                  <div class="bg-white border rounded-4 p-4 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                      <h2 class="h5 mb-0">הסל שלי</h2>
+                      <span class="text-muted small">עדכון כמויות והסרת פריטים</span>
+                    </div>
+                    <ul id="accountCartItemsList" class="list-unstyled mb-0"></ul>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="bg-white border rounded-4 p-4 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                      <h2 class="h5 mb-0">היסטוריית הזמנות</h2>
+                      <span class="text-muted small">הזמנות קודמות ופריטים</span>
+                    </div>
+                    <ul id="accountOrdersList" class="list-unstyled mb-0"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header px-4">
+      <a class="navbar-brand" href="../index.html">
+        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid"
+              style="max-height: 50px;"></span>
+        </span>
+      </a>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="navbar-custom">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="../index.html">דף הבית</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">אודות</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="products.html">מוצרים</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="testimonials.html">המלצות</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contact.html">צור קשר</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -16,12 +16,35 @@ function getLoginHref() {
   return isInPages ? './login.html' : './pages/login.html';
 }
 
+function getAccountHref() {
+  const isInPages = window.location.pathname.includes('/pages/');
+  return isInPages ? './account.html' : './pages/account.html';
+}
+
+function getStaffHref() {
+  const isInPages = window.location.pathname.includes('/pages/');
+  return isInPages ? './staff.html' : './pages/staff.html';
+}
+
+function getRoleLabel(role) {
+  if (role === 'manager') return 'לוח ניהול';
+  if (role === 'employee') return 'אזור צוות';
+  return 'אזור אישי';
+}
+
+function getDashboardHref(role) {
+  if (role === 'manager' || role === 'employee') {
+    return getStaffHref();
+  }
+  return getAccountHref();
+}
+
 function getAuthControls() {
   const controls = [];
   const navLists = document.querySelectorAll('.navbar-nav');
 
   navLists.forEach((list) => {
-    let link = list.querySelector('a[data-auth-control="true"]');
+    let link = list.querySelector('a[data-auth-control="primary"]');
 
     if (!link) {
       // Prefer existing login links so we don't duplicate menu items.
@@ -37,8 +60,41 @@ function getAuthControls() {
       list.appendChild(li);
     }
 
-    link.setAttribute('data-auth-control', 'true');
+    link.setAttribute('data-auth-control', 'primary');
     controls.push(link);
+  });
+
+  return controls;
+}
+
+function getLogoutControls() {
+  const controls = [];
+  const navLists = document.querySelectorAll('.navbar-nav');
+
+  navLists.forEach((list) => {
+    let item = list.querySelector('li[data-auth-control="logout"]');
+    let link = item?.querySelector('a');
+
+    if (!item) {
+      item = document.createElement('li');
+      item.className = 'nav-item';
+      item.setAttribute('data-auth-control', 'logout');
+      link = document.createElement('a');
+      link.className = 'nav-link';
+      item.appendChild(link);
+    }
+
+    if (item.parentElement !== list) {
+      const primaryLink = list.querySelector('a[data-auth-control="primary"]');
+      const primaryItem = primaryLink?.closest('li');
+      if (primaryItem && primaryItem.nextSibling) {
+        primaryItem.parentNode.insertBefore(item, primaryItem.nextSibling);
+      } else {
+        list.appendChild(item);
+      }
+    }
+
+    controls.push({ item, link });
   });
 
   return controls;
@@ -50,10 +106,26 @@ function applyLoggedOutState(link) {
   link.setAttribute('href', getLoginHref());
   link.classList.remove('text-danger');
   link.classList.add('fw-semibold');
+  link.classList.toggle('active', window.location.pathname.includes('/login.html'));
   link.onclick = null;
 }
 
 function applyLoggedInState(link, user) {
+  const dashboardLabel = getRoleLabel(user.role);
+  const dashboardHref = getDashboardHref(user.role);
+  link.textContent = dashboardLabel;
+  link.setAttribute('title', `מחובר כ-${user.fullName}. מעבר ל-${dashboardLabel}`);
+  link.setAttribute('href', dashboardHref);
+  link.classList.remove('text-danger');
+  link.classList.add('fw-semibold');
+  link.classList.toggle(
+    'active',
+    window.location.pathname.includes('/account.html') || window.location.pathname.includes('/staff.html')
+  );
+  link.onclick = null;
+}
+
+function applyLogoutState(link, user) {
   link.textContent = 'התנתקות';
   link.setAttribute('title', `מחובר כ-${user.fullName}. לחץ להתנתקות`);
   link.setAttribute('href', '#');
@@ -69,6 +141,7 @@ function applyLoggedInState(link, user) {
 function updateNavAuthState() {
   const user = getAuthUser();
   const controls = getAuthControls();
+  const logoutControls = getLogoutControls();
 
   controls.forEach((link) => {
     if (!user || !user.fullName) {
@@ -76,6 +149,15 @@ function updateNavAuthState() {
       return;
     }
     applyLoggedInState(link, user);
+  });
+
+  logoutControls.forEach(({ item, link }) => {
+    if (!user || !user.fullName) {
+      item.remove();
+      return;
+    }
+
+    applyLogoutState(link, user);
   });
 }
 

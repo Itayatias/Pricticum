@@ -34,7 +34,7 @@ if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage)
   showRegisterBtn.addEventListener('click', () => switchMode('register'));
 
   if (authUser && authUser.fullName) {
-    showMessage(`אתה כבר מחובר כ-${authUser.fullName}. אפשר להמשיך לקטלוג המוצרים.`, 'info');
+    showMessage(`אתה כבר מחובר כ-${authUser.fullName}. אפשר להמשיך לאזור האישי.`, 'info');
   }
 
   registerForm.addEventListener('submit', async (event) => {
@@ -95,7 +95,11 @@ if (loginForm && registerForm && showLoginBtn && showRegisterBtn && authMessage)
       showMessage(`ברוך הבא ${data.user.fullName}! התחברת בהצלחה.`, 'success');
       loginForm.reset();
       setTimeout(() => {
-        window.location.href = './products.html';
+        if (data.user.role === 'manager' || data.user.role === 'employee') {
+          window.location.href = './staff.html';
+          return;
+        }
+        window.location.href = './account.html';
       }, 700);
     } catch (_err) {
       showMessage('לא ניתן להתחבר לשרת ההתחברות. ודא שהשרת רץ.', 'danger');

@@ -41,13 +41,54 @@ function verifyPassword(password, storedHash) {
   });
 }
 
+function getUserById(userId) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT id, full_name AS fullName, email, role, password_plain AS passwordPlain FROM users WHERE id = ?',
+      [userId],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row || null);
+      }
+    );
+  });
+}
+
+async function isStaffUser(userId) {
+  const user = await getUserById(userId);
+  return user ? ['employee', 'manager'].includes(user.role) : false;
+}
+
+async function seedStaffAccounts() {
+  const staffAccounts = [
+    { fullName: 'מנהל חנות', email: 'manager@nevelat.co.il', password: 'Manager123!', role: 'manager' },
+    { fullName: 'עובד חנות', email: 'employee@nevelat.co.il', password: 'Employee123!', role: 'employee' },
+  ];
+
+  for (const account of staffAccounts) {
+    // Avoid reseeding if the account already exists.
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => {
+      db.get('SELECT id FROM users WHERE email = ?', [account.email], async (err, row) => {
+        if (err || row) return resolve();
+        const passwordHash = await hashPassword(account.password);
+        db.run(
+          'INSERT INTO users (full_name, email, password_hash, password_plain, role) VALUES (?, ?, ?, ?, ?)',
+          [account.fullName, account.email, passwordHash, account.password, account.role],
+          () => resolve()
+        );
+      });
+    });
+  }
+}
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'auth-api' });
 });
 
 app.get('/api/users', (_req, res) => {
   db.all(
-    `SELECT id, full_name AS fullName, email, password_plain AS password, created_at AS createdAt
+    `SELECT id, full_name AS fullName, email, role, password_plain AS password, created_at AS createdAt
      FROM users
      ORDER BY id DESC`,
     [],
@@ -73,8 +114,8 @@ app.post('/api/auth/register', async (req, res) => {
     const passwordHash = await hashPassword(String(password));
 
     db.run(
-      'INSERT INTO users (full_name, email, password_hash, password_plain) VALUES (?, ?, ?, ?)',
-      [String(fullName).trim(), String(email).trim().toLowerCase(), passwordHash, String(password)],
+      'INSERT INTO users (full_name, email, password_hash, password_plain, role) VALUES (?, ?, ?, ?, ?)',
+      [String(fullName).trim(), String(email).trim().toLowerCase(), passwordHash, String(password), 'customer'],
       function onInsert(err) {
         if (err) {
           if (err.message && err.message.includes('UNIQUE constraint failed')) {
@@ -89,6 +130,7 @@ app.post('/api/auth/register', async (req, res) => {
             id: this.lastID,
             fullName: String(fullName).trim(),
             email: String(email).trim().toLowerCase(),
+            role: 'customer',
           },
         });
       }
@@ -107,6 +149,7 @@ app.post('/api/auth/login', (req, res) => {
 
   db.get(
     `SELECT id, full_name AS fullName, email, password_hash AS passwordHash, password_plain AS passwordPlain
+            , role
      FROM users
      WHERE email = ?`,
     [String(email).trim().toLowerCase()],
@@ -126,7 +169,7 @@ app.post('/api/auth/login', (req, res) => {
 
         return res.json({
           message: 'Login successful',
-          user: { id: row.id, fullName: row.fullName, email: row.email },
+          user: { id: row.id, fullName: row.fullName, email: row.email, role: row.role || 'customer' },
         });
       } catch (_err) {
         return res.status(500).json({ message: 'Failed to verify password' });
@@ -254,36 +297,92 @@ app.post('/api/cart/checkout', (req, res) => {
       if (fetchErr) return res.status(500).json({ message: 'Failed to fetch cart for checkout' });
       if (!items.length) return res.status(400).json({ message: 'Cart is empty' });
 
-      const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const productIds = items.map((item) => item.productId);
+      const placeholders = productIds.map(() => '?').join(', ');
 
-      db.run(
-        'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
-        [numericUserId, total],
-        function onOrderInsert(orderErr) {
-          if (orderErr) return res.status(500).json({ message: 'Failed to create order' });
+      db.all(
+        `SELECT product_id AS productId, stock
+         FROM inventory_items
+         WHERE product_id IN (${placeholders})`,
+        productIds,
+        (inventoryErr, inventoryRows) => {
+          if (inventoryErr) return res.status(500).json({ message: 'Failed to verify inventory' });
 
-          const orderId = this.lastID;
-          const stmt = db.prepare(
-            `INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
-             VALUES (?, ?, ?, ?, ?)`
-          );
+          const inventoryMap = new Map(inventoryRows.map((row) => [row.productId, row.stock]));
+          const unavailable = items.filter((item) => {
+            const stock = inventoryMap.get(item.productId);
+            return typeof stock !== 'number' || stock < item.quantity;
+          });
 
-          for (const item of items) {
-            stmt.run(orderId, item.productId, item.productName, item.price, item.quantity);
+          if (unavailable.length) {
+            return res.status(409).json({
+              message: 'Some items are out of stock',
+              unavailable: unavailable.map((item) => item.productName),
+            });
           }
 
-          stmt.finalize((finalizeErr) => {
-            if (finalizeErr) return res.status(500).json({ message: 'Failed to finalize order items' });
+          const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-            db.run('DELETE FROM cart_items WHERE user_id = ?', [numericUserId], (clearErr) => {
-              if (clearErr) return res.status(500).json({ message: 'Order saved but failed to clear cart' });
+          db.run(
+            'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
+            [numericUserId, total],
+            function onOrderInsert(orderErr) {
+              if (orderErr) return res.status(500).json({ message: 'Failed to create order' });
 
-              return res.status(201).json({
-                message: 'Checkout completed successfully',
-                order: { id: orderId, userId: numericUserId, totalAmount: total, items },
+              const orderId = this.lastID;
+              const stmt = db.prepare(
+                `INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+                 VALUES (?, ?, ?, ?, ?)`
+              );
+
+              for (const item of items) {
+                stmt.run(orderId, item.productId, item.productName, item.price, item.quantity);
+              }
+
+              stmt.finalize((finalizeErr) => {
+                if (finalizeErr) return res.status(500).json({ message: 'Failed to finalize order items' });
+
+                let remainingUpdates = items.length;
+                let updateFailed = false;
+
+                items.forEach((item) => {
+                  db.run(
+                    `UPDATE inventory_items
+                     SET stock = stock - ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE product_id = ?`,
+                    [item.quantity, item.productId],
+                    (updateErr) => {
+                      if (updateErr) {
+                        updateFailed = true;
+                        return res.status(500).json({ message: 'Failed to update inventory after checkout' });
+                      }
+
+                      db.run(
+                        `INSERT INTO inventory_movements (product_id, user_id, delta, reason)
+                         VALUES (?, ?, ?, ?)`,
+                        [item.productId, numericUserId, -item.quantity, 'רכישת לקוח'],
+                        () => {}
+                      );
+
+                      remainingUpdates -= 1;
+                      if (!remainingUpdates && !updateFailed) {
+                        db.run('DELETE FROM cart_items WHERE user_id = ?', [numericUserId], (clearErr) => {
+                          if (clearErr) {
+                            return res.status(500).json({ message: 'Order saved but failed to clear cart' });
+                          }
+
+                          return res.status(201).json({
+                            message: 'Checkout completed successfully',
+                            order: { id: orderId, userId: numericUserId, totalAmount: total, items },
+                          });
+                        });
+                      }
+                    }
+                  );
+                });
               });
             });
-          });
+          );
         }
       );
     }
@@ -338,6 +437,141 @@ app.get('/api/orders/:userId', (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`Auth server running at http://localhost:${PORT}`);
+app.get('/api/inventory/public', (_req, res) => {
+  db.all(
+    `SELECT product_id AS productId, product_name AS productName, category, stock, min_stock, location, updated_at AS updatedAt
+     FROM inventory_items
+     ORDER BY category, product_name`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: 'Failed to fetch inventory' });
+      return res.json(rows);
+    }
+  );
 });
+
+app.get('/api/inventory', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.all(
+      `SELECT product_id AS productId, product_name AS productName, category, stock, min_stock, location, updated_at AS updatedAt
+       FROM inventory_items
+       ORDER BY category, product_name`,
+      [],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Failed to fetch inventory' });
+        return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.get('/api/inventory/movements', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.all(
+      `SELECT product_id AS productId, user_id AS userId, delta, reason, created_at AS createdAt
+       FROM inventory_movements
+       ORDER BY id DESC
+       LIMIT 25`,
+      [],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Failed to fetch inventory movements' });
+        return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.post('/api/inventory/adjust', async (req, res) => {
+  const { userId, productId, delta, reason } = req.body || {};
+  const numericUserId = Number(userId);
+  const numericDelta = Number(delta);
+
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!productId || !Number.isInteger(numericDelta) || numericDelta === 0) {
+    return res.status(400).json({ message: 'productId and non-zero delta are required' });
+  }
+
+  try {
+    const user = await getUserById(numericUserId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.get(
+      `SELECT stock FROM inventory_items WHERE product_id = ?`,
+      [String(productId)],
+      (fetchErr, row) => {
+        if (fetchErr) return res.status(500).json({ message: 'Failed to load inventory item' });
+        if (!row) return res.status(404).json({ message: 'Inventory item not found' });
+
+        const nextStock = row.stock + numericDelta;
+        if (nextStock < 0) {
+          return res.status(409).json({ message: 'Stock cannot go below zero' });
+        }
+
+        db.run(
+          `UPDATE inventory_items
+           SET stock = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE product_id = ?`,
+          [nextStock, String(productId)],
+          function onUpdate(updateErr) {
+            if (updateErr) return res.status(500).json({ message: 'Failed to update inventory' });
+            db.run(
+              `INSERT INTO inventory_movements (product_id, user_id, delta, reason)
+               VALUES (?, ?, ?, ?)`,
+              [String(productId), numericUserId, numericDelta, String(reason || 'התאמת מלאי')],
+              () => {}
+            );
+
+            return res.json({
+              message: 'Inventory updated successfully',
+              item: { productId: String(productId), stock: nextStock },
+            });
+          }
+        );
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+async function bootstrap() {
+  try {
+    await seedStaffAccounts();
+  } catch (_err) {
+    // Seeding failure should not block the application startup.
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Auth server running at http://localhost:${PORT}`);
+  });
+}
+
+bootstrap();
