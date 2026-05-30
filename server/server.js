@@ -1,0 +1,333 @@
+const express = require('express');
+const crypto = require('crypto');
+const db = require('./db');
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16).toString('hex');
+    crypto.scrypt(password, salt, 64, (err, derivedKey) => {
+      if (err) return reject(err);
+      resolve(`${salt}:${derivedKey.toString('hex')}`);
+    });
+  });
+}
+
+function verifyPassword(password, storedHash) {
+  return new Promise((resolve, reject) => {
+    const [salt, hash] = storedHash.split(':');
+    if (!salt || !hash) return resolve(false);
+    crypto.scrypt(password, salt, 64, (err, derivedKey) => {
+      if (err) return reject(err);
+      const hashBuffer = Buffer.from(hash, 'hex');
+      resolve(
+        hashBuffer.length === derivedKey.length &&
+          crypto.timingSafeEqual(hashBuffer, derivedKey)
+      );
+    });
+  });
+}
+
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, service: 'auth-api' });
+});
+
+app.get('/api/users', (_req, res) => {
+  db.all(
+    'SELECT id, full_name AS fullName, email, created_at AS createdAt FROM users ORDER BY id DESC',
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: 'Failed to fetch users' });
+      res.json(rows);
+    }
+  );
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const { fullName, email, password } = req.body || {};
+
+  if (!fullName || !email || !password) {
+    return res.status(400).json({ message: 'fullName, email and password are required' });
+  }
+
+  if (String(password).length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters' });
+  }
+
+  try {
+    const passwordHash = await hashPassword(String(password));
+
+    db.run(
+      'INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)',
+      [String(fullName).trim(), String(email).trim().toLowerCase(), passwordHash],
+      function onInsert(err) {
+        if (err) {
+          if (err.message && err.message.includes('UNIQUE constraint failed')) {
+            return res.status(409).json({ message: 'User with this email already exists' });
+          }
+          return res.status(500).json({ message: 'Failed to register user' });
+        }
+
+        return res.status(201).json({
+          message: 'Registered successfully',
+          user: {
+            id: this.lastID,
+            fullName: String(fullName).trim(),
+            email: String(email).trim().toLowerCase(),
+          },
+        });
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to hash password' });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'email and password are required' });
+  }
+
+  db.get(
+    'SELECT id, full_name AS fullName, email, password_hash AS passwordHash FROM users WHERE email = ?',
+    [String(email).trim().toLowerCase()],
+    async (err, row) => {
+      if (err) return res.status(500).json({ message: 'Failed to login' });
+      if (!row) return res.status(401).json({ message: 'Invalid email or password' });
+
+      try {
+        const isValid = await verifyPassword(String(password), row.passwordHash);
+        if (!isValid) return res.status(401).json({ message: 'Invalid email or password' });
+
+        return res.json({
+          message: 'Login successful',
+          user: { id: row.id, fullName: row.fullName, email: row.email },
+        });
+      } catch (_err) {
+        return res.status(500).json({ message: 'Failed to verify password' });
+      }
+    }
+  );
+});
+
+app.get('/api/cart/:userId', (req, res) => {
+  const userId = Number(req.params.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Invalid user id' });
+  }
+
+  db.all(
+    `SELECT id, product_id AS productId, product_name AS productName, price, quantity
+     FROM cart_items
+     WHERE user_id = ?
+     ORDER BY id DESC`,
+    [userId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: 'Failed to fetch cart' });
+
+      const total = rows.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      return res.json({ items: rows, total });
+    }
+  );
+});
+
+app.post('/api/cart/add', (req, res) => {
+  const { userId, productId, productName, price, quantity } = req.body || {};
+  const qty = Number(quantity || 1);
+  const numericPrice = Number(price);
+
+  if (!Number.isInteger(Number(userId)) || Number(userId) <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!productId || !productName || !Number.isFinite(numericPrice) || numericPrice <= 0) {
+    return res.status(400).json({ message: 'productId, productName and price are required' });
+  }
+  if (!Number.isInteger(qty) || qty <= 0) {
+    return res.status(400).json({ message: 'Quantity must be a positive integer' });
+  }
+
+  db.run(
+    `INSERT INTO cart_items (user_id, product_id, product_name, price, quantity)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(user_id, product_id)
+     DO UPDATE SET
+       quantity = quantity + excluded.quantity,
+       price = excluded.price,
+       updated_at = CURRENT_TIMESTAMP`,
+    [Number(userId), String(productId), String(productName), numericPrice, qty],
+    (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to add product to cart' });
+      return res.status(201).json({ message: 'Product added to cart' });
+    }
+  );
+});
+
+app.post('/api/cart/update-quantity', (req, res) => {
+  const { userId, productId, quantity } = req.body || {};
+  const numericUserId = Number(userId);
+  const numericQuantity = Number(quantity);
+
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!productId) {
+    return res.status(400).json({ message: 'productId is required' });
+  }
+  if (!Number.isInteger(numericQuantity) || numericQuantity <= 0) {
+    return res.status(400).json({ message: 'Quantity must be a positive integer' });
+  }
+
+  db.run(
+    `UPDATE cart_items
+     SET quantity = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = ? AND product_id = ?`,
+    [numericQuantity, numericUserId, String(productId)],
+    function onUpdate(err) {
+      if (err) return res.status(500).json({ message: 'Failed to update quantity' });
+      if (this.changes === 0) return res.status(404).json({ message: 'Cart item not found' });
+      return res.json({ message: 'Quantity updated successfully' });
+    }
+  );
+});
+
+app.post('/api/cart/remove', (req, res) => {
+  const { userId, productId } = req.body || {};
+  const numericUserId = Number(userId);
+
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!productId) {
+    return res.status(400).json({ message: 'productId is required' });
+  }
+
+  db.run(
+    'DELETE FROM cart_items WHERE user_id = ? AND product_id = ?',
+    [numericUserId, String(productId)],
+    function onDelete(err) {
+      if (err) return res.status(500).json({ message: 'Failed to remove item from cart' });
+      if (this.changes === 0) return res.status(404).json({ message: 'Cart item not found' });
+      return res.json({ message: 'Item removed successfully' });
+    }
+  );
+});
+
+app.post('/api/cart/checkout', (req, res) => {
+  const { userId } = req.body || {};
+  const numericUserId = Number(userId);
+
+  if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  db.all(
+    `SELECT product_id AS productId, product_name AS productName, price, quantity
+     FROM cart_items
+     WHERE user_id = ?`,
+    [numericUserId],
+    (fetchErr, items) => {
+      if (fetchErr) return res.status(500).json({ message: 'Failed to fetch cart for checkout' });
+      if (!items.length) return res.status(400).json({ message: 'Cart is empty' });
+
+      const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      db.run(
+        'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
+        [numericUserId, total],
+        function onOrderInsert(orderErr) {
+          if (orderErr) return res.status(500).json({ message: 'Failed to create order' });
+
+          const orderId = this.lastID;
+          const stmt = db.prepare(
+            `INSERT INTO order_items (order_id, product_id, product_name, price, quantity)
+             VALUES (?, ?, ?, ?, ?)`
+          );
+
+          for (const item of items) {
+            stmt.run(orderId, item.productId, item.productName, item.price, item.quantity);
+          }
+
+          stmt.finalize((finalizeErr) => {
+            if (finalizeErr) return res.status(500).json({ message: 'Failed to finalize order items' });
+
+            db.run('DELETE FROM cart_items WHERE user_id = ?', [numericUserId], (clearErr) => {
+              if (clearErr) return res.status(500).json({ message: 'Order saved but failed to clear cart' });
+
+              return res.status(201).json({
+                message: 'Checkout completed successfully',
+                order: { id: orderId, userId: numericUserId, totalAmount: total, items },
+              });
+            });
+          });
+        }
+      );
+    }
+  );
+});
+
+app.get('/api/orders/:userId', (req, res) => {
+  const userId = Number(req.params.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Invalid user id' });
+  }
+
+  db.all(
+    `SELECT id, total_amount AS totalAmount, created_at AS createdAt
+     FROM orders
+     WHERE user_id = ?
+     ORDER BY id DESC`,
+    [userId],
+    (ordersErr, orders) => {
+      if (ordersErr) return res.status(500).json({ message: 'Failed to fetch orders' });
+      if (!orders.length) return res.json([]);
+
+      const orderIds = orders.map((order) => order.id);
+      const placeholders = orderIds.map(() => '?').join(', ');
+
+      db.all(
+        `SELECT order_id AS orderId, product_id AS productId, product_name AS productName, price, quantity
+         FROM order_items
+         WHERE order_id IN (${placeholders})
+         ORDER BY id DESC`,
+        orderIds,
+        (itemsErr, items) => {
+          if (itemsErr) return res.status(500).json({ message: 'Failed to fetch order items' });
+
+          const itemsByOrderId = {};
+          for (const item of items) {
+            if (!itemsByOrderId[item.orderId]) {
+              itemsByOrderId[item.orderId] = [];
+            }
+            itemsByOrderId[item.orderId].push(item);
+          }
+
+          const payload = orders.map((order) => ({
+            ...order,
+            items: itemsByOrderId[order.id] || [],
+          }));
+
+          return res.json(payload);
+        }
+      );
+    }
+  );
+});
+
+app.listen(PORT, () => {
+  console.log(`Auth server running at http://localhost:${PORT}`);
+});

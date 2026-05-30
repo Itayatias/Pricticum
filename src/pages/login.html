@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>התחברות והרשמה - נבלט בע"מ</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
+      <div class="container-fluid px-0">
+        <a class="navbar-brand" href="../index.html">
+          <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+            <span style="letter-spacing: 0.12rem">נבלט</span>
+            <span>חומרי בניין ואספקה</span>
+          </span>
+        </a>
+        <div class="mx-auto d-lg-block d-none">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">אודות</a></li>
+            <li class="nav-item"><a class="nav-link" href="products.html">מוצרים</a></li>
+            <li class="nav-item"><a class="nav-link" href="testimonials.html">המלצות</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="login.html">התחברות</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="py-5 py-lg-9">
+      <section class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-7 col-xl-6">
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-4 p-lg-5">
+                <h1 class="h3 mb-3 text-center">כניסה למערכת</h1>
+                <p class="text-muted text-center mb-4">אפשר להתחבר לחשבון קיים או לבצע הרשמה חדשה.</p>
+
+                <div class="d-flex gap-2 mb-4">
+                  <button type="button" class="btn btn-dark w-50" id="showLoginBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס התחברות קיים">התחברות</button>
+                  <button type="button" class="btn btn-outline-dark w-50" id="showRegisterBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס פתיחת חשבון חדש">הרשמה</button>
+                </div>
+
+                <div id="authהודעה" class="alert d-none" role="alert"></div>
+
+                <form id="loginForm">
+                  <div class="mb-3">
+                    <label for="loginEmail" class="form-label">אימייל</label>
+                    <input id="loginEmail" name="email" type="email" class="form-control" required />
+                  </div>
+                  <div class="mb-3">
+                    <label for="loginPassword" class="form-label">סיסמה</label>
+                    <input id="loginPassword" name="password" type="password" class="form-control" minlength="6" required />
+                  </div>
+                  <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תבדוק את פרטי ההתחברות שלך">התחבר</button>
+                </form>
+
+                <form id="registerForm" class="d-none">
+                  <div class="mb-3">
+                    <label for="registerFullName" class="form-label">שם מלא</label>
+                    <input id="registerFullName" name="fullName" type="text" class="form-control" required />
+                  </div>
+                  <div class="mb-3">
+                    <label for="registerEmail" class="form-label">אימייל</label>
+                    <input id="registerEmail" name="email" type="email" class="form-control" required />
+                  </div>
+                  <div class="mb-3">
+                    <label for="registerPassword" class="form-label">סיסמה</label>
+                    <input id="registerPassword" name="password" type="password" class="form-control" minlength="6" required />
+                  </div>
+                  <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תשמור אותך במערכת כלקוח חדש">צור חשבון</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="../assets/js/main.js"></script>
+    <script type="module" src="../assets/js/login.js"></script>
+  </body>
+</html>
