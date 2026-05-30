@@ -1,36 +1,41 @@
-# Pricticum
+# Furnish Free Bootstrap 5 Furniture Website Template
 
-Practicum Project
+#### Preview
 
-## Node.js Website Setup
+ - [Demo](https://themewagon.github.io/furnish/)
 
-הפרויקט הזה הוא אתר פשוט ב-Node.js שמשרת דפי HTML סטטיים דרך Express.
+#### Download
+ - [Download from ThemeWagon](https://themewagon.com/themes/furnish/)
 
-### פקודות זמינות
+## Getting Started
 
-- `npm install` - מתקין את התלויות
-- `npm run dev` - מפעיל את השרת עם reload אוטומטי (nodemon)
-- `npm start` - מפעיל את השרת ב-node רגיל
+1. Clone Repository
+```
+git clone https://github.com/themewagon/furnish.git
+```
+2. Install Dependencies
+```
+npm i
+```
+3. Run the development server:
 
-### פתיחת האתר
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-לאחר התקנה, פתח את:
+## Author 
+```
+Design and code is completely written by CodesCandy and development team. 
+```
 
-- `http://localhost:3000`
+## License
 
-### קבצי פרויקט
-
-- `server.js` - קונפיגורציית שרת Express
-- `public/index.html` - דף הבית
-- `public/style.css` - סגנונות בסיסיים
-- `public/script.js` - JavaScript בצד הלקוח
-- `data/database.db` - מסד נתונים SQLite שנוצר אוטומטית
-
-## מסד נתונים SQLite
-
-הפרויקט עכשיו משתמש ב-SQLite דרך `sqlite3` כדי לשמור הודעות בנתונים.
-
-- `GET /api/messages` - מביא את כל ההודעות מהמסד
-- `POST /api/messages` - שומר הודעה חדשה
-
-הכנס הודעה בטופס בדף הבית והיא תשמר במסד הנתונים.
+ - Design and Code is Copyright &copy; <a href="https://codescandy.com" target="_blank">CodesCandy</a>
+ - Licensed cover under [MIT]
+ - Distributed by <a href="https://themewagon.com" target="_blank">ThemeWagon</a>
