@@ -16,54 +16,66 @@ function getLoginHref() {
   return isInPages ? './login.html' : './pages/login.html';
 }
 
-function ensureAuthNavItems() {
+function getAuthControls() {
+  const controls = [];
   const navLists = document.querySelectorAll('.navbar-nav');
+
   navLists.forEach((list) => {
-    const existingAuthControl = list.querySelector('[data-auth-control="true"]');
-    if (existingAuthControl) return;
+    let link = list.querySelector('a[data-auth-control="true"]');
 
-    const li = document.createElement('li');
-    li.className = 'nav-item';
+    if (!link) {
+      // Prefer existing login links so we don't duplicate menu items.
+      link = list.querySelector('a[href$="login.html"]');
+    }
 
-    const link = document.createElement('a');
-    link.className = 'nav-link';
+    if (!link) {
+      const li = document.createElement('li');
+      li.className = 'nav-item';
+      link = document.createElement('a');
+      link.className = 'nav-link';
+      li.appendChild(link);
+      list.appendChild(li);
+    }
+
     link.setAttribute('data-auth-control', 'true');
-    link.href = getLoginHref();
-    link.textContent = 'התחברות';
-
-    li.appendChild(link);
-    list.appendChild(li);
+    controls.push(link);
   });
+
+  return controls;
+}
+
+function applyLoggedOutState(link) {
+  link.textContent = 'התחברות';
+  link.setAttribute('title', 'מעבר לדף התחברות');
+  link.setAttribute('href', getLoginHref());
+  link.classList.remove('text-danger');
+  link.classList.add('fw-semibold');
+  link.onclick = null;
+}
+
+function applyLoggedInState(link, user) {
+  link.textContent = 'התנתקות';
+  link.setAttribute('title', `מחובר כ-${user.fullName}. לחץ להתנתקות`);
+  link.setAttribute('href', '#');
+  link.classList.add('fw-semibold', 'text-danger');
+
+  link.onclick = (event) => {
+    event.preventDefault();
+    clearAuth();
+    window.location.href = getLoginHref();
+  };
 }
 
 function updateNavAuthState() {
-  ensureAuthNavItems();
-
   const user = getAuthUser();
-  const authControls = document.querySelectorAll('[data-auth-control="true"]');
+  const controls = getAuthControls();
 
-  authControls.forEach((link) => {
-    link.classList.add('btn', 'btn-sm', 'ms-2');
+  controls.forEach((link) => {
     if (!user || !user.fullName) {
-      link.classList.remove('btn-outline-danger');
-      link.classList.add('btn-outline-dark');
-      link.textContent = 'התחברות';
-      link.setAttribute('title', 'מעבר לדף התחברות');
-      link.setAttribute('href', getLoginHref());
-      link.onclick = null;
+      applyLoggedOutState(link);
       return;
     }
-
-    link.classList.remove('btn-outline-dark');
-    link.classList.add('btn-outline-danger');
-    link.textContent = 'התנתקות';
-    link.setAttribute('title', `מחובר כ-${user.fullName}. לחץ להתנתקות`);
-    link.setAttribute('href', '#');
-    link.onclick = (event) => {
-      event.preventDefault();
-      clearAuth();
-      window.location.href = getLoginHref();
-    };
+    applyLoggedInState(link, user);
   });
 }
 
