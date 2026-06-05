@@ -15,6 +15,15 @@ function formatMoney(amount) {
   return `₪ ${Number(amount || 0).toFixed(2)}`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 const PRODUCT_CATALOG = [
   { displayName: 'צבע לקיר לבן 18 ליטר', category: 'צבע', color: 'לבן', brand: 'אקווניר', price: 300, oldPrice: 350, productId: 'paint-wall-white-18l', featuredRank: 1 },
   { displayName: 'בלוק בנייה', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 10, oldPrice: 12, productId: 'concrete-block', featuredRank: 2 },
@@ -148,6 +157,78 @@ function applyInventoryBadges() {
       button.textContent = 'הוסף לסל';
     }
   });
+}
+
+function createCustomProductCard(item, index) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'col-sm-6 col-md-4';
+  wrapper.dataset.category = item.category || '';
+  wrapper.dataset.color = '';
+  wrapper.dataset.priceBand = getPriceBand(Number(item.price || 0));
+  wrapper.dataset.price = String(item.price || 0);
+  wrapper.dataset.rank = String(1000 + index);
+  wrapper.dataset.name = item.productName || '';
+
+  wrapper.innerHTML = `
+    <div class="card product-card">
+      <a href="#"><img src="${escapeHtml(item.imageUrl)}" class="card-img-top" alt="${escapeHtml(item.productName)}"></a>
+      <div class="card-body">
+        <p class="text-muted mb-2 text-uppercase text-xs mb-3">${escapeHtml(item.category || 'מוצר חדש')}</p>
+        <div class="mb-3">
+          <h3 class="h5 mb-1">${escapeHtml(item.productName)}</h3>
+          <div class="">
+            <span class="">${formatMoney(item.price)}</span>
+          </div>
+          <div class="text-muted small mt-2">מיקום: ${escapeHtml(item.location || 'מחסן ראשי')}</div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
+          data-product-id="${escapeHtml(item.productId)}"
+          data-product-name="${escapeHtml(item.productName)}"
+          data-product-price="${Number(item.price || 0)}"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="הוספת המוצר לסל הקניות">הוסף לסל</button>
+      </div>
+    </div>
+  `;
+
+  return wrapper;
+}
+
+async function loadCustomProducts() {
+  const grid = document.getElementById('productsGrid');
+  if (!grid) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/products/custom`);
+    const items = await response.json();
+    if (!response.ok || !Array.isArray(items)) return;
+
+    const existingIds = new Set(
+      Array.from(grid.querySelectorAll('.add-to-cart-btn'))
+        .map((button) => button.dataset.productId)
+        .filter(Boolean)
+    );
+
+    items
+      .filter((item) => item.imageUrl && Number(item.price || 0) > 0 && !existingIds.has(item.productId))
+      .forEach((item, index) => {
+        const card = createCustomProductCard(item, index);
+        grid.appendChild(card);
+        const button = card.querySelector('.add-to-cart-btn');
+        if (button) {
+          button.dataset.bound = 'true';
+          button.addEventListener('click', () => addToCart(button));
+        }
+        existingIds.add(item.productId);
+      });
+
+    hydrateProductCards();
+    applyInventoryBadges();
+    applyProductFilters();
+  } catch (_err) {
+    // Custom product loading is best-effort; the static catalog remains usable.
+  }
 }
 
 async function loadPublicInventory() {
@@ -489,24 +570,30 @@ async function checkout() {
   }
 }
 
-if (!authUser) {
-  updateLoggedOutState();
-} else {
-  updateLoggedInState();
+async function initializePage() {
+  if (!authUser) {
+    updateLoggedOutState();
+  } else {
+    updateLoggedInState();
+  }
+
+  hydrateProductCards();
+  bindFilterControls();
+
+  addToCartButtons.forEach((button) => {
+    if (button.dataset.bound) return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => addToCart(button));
+  });
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', checkout);
+  }
+
+  await Promise.all([loadPublicInventory(), loadCustomProducts()]);
+  applyProductFilters();
+  loadCart();
+  loadOrderHistory();
 }
 
-hydrateProductCards();
-bindFilterControls();
-applyProductFilters();
-loadPublicInventory();
-
-addToCartButtons.forEach((button) => {
-  button.addEventListener('click', () => addToCart(button));
-});
-
-if (checkoutBtn) {
-  checkoutBtn.addEventListener('click', checkout);
-}
-
-loadCart();
-loadOrderHistory();
+initializePage();

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מוצרים ומלאי - נבלט בע״מ</title>
+  <script type="module" crossorigin src="../assets/js/main.js"></script>
+  <script type="module" crossorigin src="../assets/js/staff.js"></script>
+  <link rel="stylesheet" crossorigin href="../assets/css/main.css">
+</head>
+
+<body class="font-sans text-gray-800">
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
+    <div class="container-fluid px-0">
+      <a class="navbar-brand" href="../index.html">
+        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;"></span>
+        </span>
+      </a>
+      <div class="mx-auto d-lg-block d-none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="manager.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-suppliers.html">ספקים - הזמנות רכש</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-users.html">ניהול משתמשים</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="manager-inventory.html">מוצרים ומלאי</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-reports.html">דו״חות ניהוליים</a></li>
+        </ul>
+      </div>
+      <div class="d-flex align-items-center gap-4">
+        <a href="products.html#cart-section" class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link">
+          <span><i class="bi bi-cart3"></i></span>
+          <span>סל לקוח: <span class="header-cart-count">0</span></span>
+        </a>
+        <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="py-lg-8 py-5">
+      <div class="container">
+        <div class="bg-light border rounded-4 p-4 p-lg-5">
+          <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
+            <div>
+              <p class="text-uppercase text-xs fw-semibold text-muted mb-2">מוצרים ומלאי</p>
+              <h1 class="display-6 mb-2">ניהול מלאי והוספת מוצרים</h1>
+              <p id="staffUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="manager.html" class="btn btn-outline-dark">לדשבורד</a>
+              <a href="manager-suppliers.html" class="btn btn-outline-secondary">לספקים</a>
+            </div>
+          </div>
+
+          <div id="staffStatus" class="alert alert-info d-none mb-4" role="alert"></div>
+
+          <div class="row g-4">
+            <div class="col-lg-8">
+              <div class="bg-white border rounded-4 p-4 h-100 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h2 class="h5 mb-0">מלאי החנות</h2>
+                  <span class="text-muted small">עדכון כמויות ומאפייני מוצר</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table align-middle inventory-table mb-0">
+                    <thead>
+                      <tr>
+                        <th>מוצר</th>
+                        <th>קטגוריה</th>
+                        <th>כמות</th>
+                        <th>יעד מינימום</th>
+                        <th>סטטוס</th>
+                        <th>פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="bg-white border rounded-4 p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h2 class="h5 mb-0">תנועות מלאי אחרונות</h2>
+                </div>
+                <ul id="inventoryMovementsList" class="list-unstyled mb-0"></ul>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <div class="bg-white border rounded-4 p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h2 class="h5 mb-0">הוספת / עריכת מוצר</h2>
+                </div>
+                <form id="inventoryForm" class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label">קוד מוצר</label>
+                    <input id="inventoryProductId" name="productId" class="form-control" placeholder="לדוגמה: paint-roller" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">שם המוצר</label>
+                    <input id="inventoryProductName" name="productName" class="form-control" placeholder="שם המוצר" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">קטגוריה</label>
+                    <select id="inventoryCategory" name="category" class="form-select" required>
+                      <option value="חומרי בנייה">חומרי בנייה</option>
+                      <option value="צבע">צבע</option>
+                      <option value="אינסטלציה">אינסטלציה</option>
+                      <option value="חשמל">חשמל</option>
+                      <option value="כלי עבודה">כלי עבודה</option>
+                      <option value="גינון">גינון</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">ספק</label>
+                    <select id="inventorySupplierId" name="supplierId" class="form-select" required>
+                      <option value="">טוען ספקים...</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">מחיר</label>
+                    <input id="inventoryPrice" name="price" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">כמות במלאי</label>
+                    <input id="inventoryStock" name="stock" type="number" min="0" class="form-control" value="0" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">מינימום במלאי</label>
+                    <input id="inventoryMinStock" name="minStock" type="number" min="0" class="form-control" value="5" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">מיקום</label>
+                    <input id="inventoryLocation" name="location" class="form-control" value="מחסן ראשי" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">קישור תמונה</label>
+                    <input id="inventoryImageUrl" name="imageUrl" type="url" class="form-control" placeholder="https://example.com/image.jpg">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">העלאת תמונה</label>
+                    <input id="inventoryImageFile" name="imageFile" type="file" accept="image/*" class="form-control">
+                  </div>
+                  <div class="col-12">
+                    <div class="bg-light border rounded-3 p-3 text-center">
+                      <img id="inventoryImagePreview" alt="תצוגה מקדימה של המוצר" class="img-fluid rounded-3 d-none" />
+                      <div id="inventoryImagePreviewEmpty" class="text-muted small">יש לבחור קישור או קובץ תמונה כדי להציג תצוגה מקדימה.</div>
+                    </div>
+                  </div>
+                  <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary" id="inventorySaveBtn">שמירת מוצר</button>
+                    <button type="button" class="btn btn-outline-secondary" id="inventoryResetBtn">ניקוי טופס</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header px-4">
+      <a class="navbar-brand" href="../index.html">
+        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;"></span>
+        </span>
+      </a>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="navbar-custom">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="manager.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-suppliers.html">ספקים - הזמנות רכש</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-users.html">ניהול משתמשים</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="manager-inventory.html">מוצרים ומלאי</a></li>
+          <li class="nav-item"><a class="nav-link" href="manager-reports.html">דו״חות ניהוליים</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

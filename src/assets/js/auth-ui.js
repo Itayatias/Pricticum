@@ -32,12 +32,14 @@ function getStaffHref() {
 }
 
 function getRoleLabel(role) {
+  if (role === 'customer') return 'אזור אישי';
   if (role === 'manager') return 'לוח מנהל';
   if (role === 'employee') return 'אזור עובדים';
   return 'אזור אישי';
 }
 
 function getDashboardHref(role) {
+  if (role === 'customer') return getAccountHref();
   if (role === 'manager' || role === 'employee') {
     return role === 'manager' ? getManagerHref() : getStaffHref();
   }
@@ -127,7 +129,11 @@ function applyLoggedInState(link, user) {
     'active',
     window.location.pathname.includes('/account.html') ||
       window.location.pathname.includes('/staff.html') ||
-      window.location.pathname.includes('/manager.html')
+      window.location.pathname.includes('/manager.html') ||
+      window.location.pathname.includes('/manager-users.html') ||
+      window.location.pathname.includes('/manager-suppliers.html') ||
+      window.location.pathname.includes('/manager-inventory.html') ||
+      window.location.pathname.includes('/manager-reports.html')
   );
   link.onclick = null;
 }

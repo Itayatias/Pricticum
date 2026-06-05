@@ -10,8 +10,9 @@
       <div class="container-fluid px-0">
         <a class="navbar-brand" href="../index.html">
           <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-            <span style="letter-spacing: 0.12rem">נבלט</span>
-            <span>חומרי בניין ואספקה</span>
+            <span style="letter-spacing: .12rem;">
+              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;">
+            </span>
           </span>
         </a>
         <div class="mx-auto d-lg-block d-none">
@@ -70,6 +71,93 @@
                   </div>
                   <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תשמור אותך במערכת כלקוח חדש">צור חשבון</button>
                 </form>
+
+                <hr class="my-4" />
+
+                <div class="bg-light border rounded-4 p-4">
+                  <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 align-items-lg-center mb-3">
+                    <div>
+                      <h2 class="h5 mb-1">הרשאות לפי תפקיד</h2>
+                      <p class="text-muted mb-0">לאחר ההתחברות המערכת מפנה את המשתמש למסך המתאים בלבד, בהתאם לתפקיד שלו.</p>
+                    </div>
+                    <span class="badge text-bg-dark align-self-start align-self-lg-center">ניהול הרשאות</span>
+                  </div>
+
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                          <h3 class="h6">לקוח</h3>
+                          <p class="text-muted small mb-3">ממשק נפרד לרכישה, מעקב הזמנות ופרטי חשבון.</p>
+                          <ul class="list-unstyled small mb-0">
+                            <li>• קטלוג, עגלה, הזמנות ומעקב משלוחים</li>
+                            <li>• החשבון שלי וכתובות משלוח</li>
+                            <li>• פנייה לחנות ובקשת הצעת מחיר</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                          <h3 class="h6">עובד חנות</h3>
+                          <p class="text-muted small mb-3">ממשק תפעולי לקופה, מלאי, הזמנות ושירות לקוחות.</p>
+                          <ul class="list-unstyled small mb-0">
+                            <li>• משימות יומיות, הזמנות לטיפול ופעולות קופה</li>
+                            <li>• חיפוש לקוח/מוצר, עדכון מלאי וקליטת סחורה</li>
+                            <li>• ניהול הזמנות ומשלוחים ושירות לקוחות</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                          <h3 class="h6">מנהל / אדמיניסטרציה</h3>
+                          <p class="text-muted small mb-3">ממשק ניהולי מלא עם גישה לדוחות, עובדים, ספקים ולקוחות.</p>
+                          <ul class="list-unstyled small mb-0">
+                            <li>• דשבורד, מלאי, ספקים ולקוחות</li>
+                            <li>• דוחות, ניהול עובדים והרשאות</li>
+                            <li>• הגדרות מערכת, גיבויים ולוג פעילות</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>פעולה</th>
+                          <th class="text-center">לקוח</th>
+                          <th class="text-center">עובד</th>
+                          <th class="text-center">מנהל</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>צפייה במוצרים וביצוע הזמנה</td>
+                          <td class="text-center">✔</td>
+                          <td class="text-center">✔</td>
+                          <td class="text-center">✔</td>
+                        </tr>
+                        <tr>
+                          <td>פתיחת תיק לקוח, עדכון מלאי ופעולות תפעול</td>
+                          <td class="text-center">✖</td>
+                          <td class="text-center">✔</td>
+                          <td class="text-center">✔</td>
+                        </tr>
+                        <tr>
+                          <td>דוחות, רכש, עובדים, ספקים והגדרות מערכת</td>
+                          <td class="text-center">✖</td>
+                          <td class="text-center">✖</td>
+                          <td class="text-center">✔</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -19,6 +19,7 @@ db.serialize(() => {
       password_hash TEXT NOT NULL,
       password_plain TEXT,
       role TEXT NOT NULL DEFAULT 'customer',
+      customer_type TEXT NOT NULL DEFAULT 'private',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -26,6 +27,7 @@ db.serialize(() => {
   // Backward-compatible migration for existing databases.
   db.run('ALTER TABLE users ADD COLUMN password_plain TEXT', () => {});
   db.run('ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT \'customer\'', () => {});
+  db.run('ALTER TABLE users ADD COLUMN customer_type TEXT NOT NULL DEFAULT \'private\'', () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS cart_items (
@@ -73,7 +75,58 @@ db.serialize(() => {
       stock INTEGER NOT NULL DEFAULT 0,
       min_stock INTEGER NOT NULL DEFAULT 5,
       location TEXT NOT NULL DEFAULT 'מחסן ראשי',
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      supplier_id INTEGER,
+      product_price REAL,
+      product_image_url TEXT,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(supplier_id) REFERENCES suppliers(id)
+    )
+  `);
+
+  db.run('ALTER TABLE inventory_items ADD COLUMN supplier_id INTEGER', () => {});
+  db.run('ALTER TABLE inventory_items ADD COLUMN product_price REAL', () => {});
+  db.run('ALTER TABLE inventory_items ADD COLUMN product_image_url TEXT', () => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplier_name TEXT NOT NULL UNIQUE,
+      supplier_code TEXT NOT NULL UNIQUE,
+      product_category TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run('ALTER TABLE suppliers ADD COLUMN supplier_code TEXT NOT NULL DEFAULT \'\'', () => {});
+  db.run('ALTER TABLE suppliers ADD COLUMN product_category TEXT NOT NULL DEFAULT \'\'', () => {});
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      supplier_id INTEGER NOT NULL,
+      created_by_user_id INTEGER NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(supplier_id) REFERENCES suppliers(id),
+      FOREIGN KEY(created_by_user_id) REFERENCES users(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS purchase_order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_order_id INTEGER NOT NULL,
+      product_id TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      stock INTEGER NOT NULL,
+      min_stock INTEGER NOT NULL,
+      FOREIGN KEY(purchase_order_id) REFERENCES purchase_orders(id)
     )
   `);
 
@@ -87,6 +140,79 @@ db.serialize(() => {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS work_hours (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      check_in TEXT NOT NULL,
+      check_out TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+  `);
+
+  const seedSuppliers = [
+    ['נירלט', 'NIRLAT', 'צבע', 'nirlat@suppliers.co.il', '03-5550001', 'ספק צבע ראשי'],
+    ['פארנשר', 'PARNESHER', 'חומרי בנייה', 'parnesher@suppliers.co.il', '03-5550002', 'ספק חומרי בנייה כלליים'],
+    ['סיקה', 'SIKA', 'חומרי בנייה', 'sika@suppliers.co.il', '03-5550003', 'ספק דבקים ואיטום'],
+    ['SP', 'SPPIPE', 'אינסטלציה', 'sp@suppliers.co.il', '03-5550004', 'ספק אביזרי אינסטלציה'],
+    ['תרמוקיר', 'THERMOKIR', 'חומרי בנייה', 'thermokir@suppliers.co.il', '03-5550005', 'ספק בידוד וחומרים משלימים'],
+    ['מטרפיקס', 'MRFIX', 'חומרי בנייה', 'mrfix@suppliers.co.il', '03-5550006', 'ספק חומרי בנייה ותחזוקה'],
+    ['יעקובי', 'YAACOB', 'צבע', 'yaacob@suppliers.co.il', '03-5550007', 'ספק צבע ואביזרי צביעה'],
+    ['ניסקו', 'NISKO', 'חשמל', 'nisko@suppliers.co.il', '03-5550008', 'ספק חשמל'],
+    ['ספדיני', 'SPADINI', 'כלי עבודה', 'spadini@suppliers.co.il', '03-5550009', 'ספק כלים ואביזרים'],
+    ['ביגיבונד', 'BIGIBOND', 'גינון', 'bigibond@suppliers.co.il', '03-5550010', 'ספק גינון'],
+    ['דשדש', 'DASHEDASH', 'חומרי בנייה', 'deshadesh@suppliers.co.il', '03-5550011', 'ספק גמר ובנייה'],
+    ['פלאד', 'FLOOD', 'אינסטלציה', 'flood@suppliers.co.il', '03-5550012', 'ספק אינסטלציה'],
+    ['חמת', 'HAMAT', 'אינסטלציה', 'hamat@suppliers.co.il', '03-5550013', 'ספק ברזים ואביזרים'],
+    ['סאג', 'SAG', 'אינסטלציה', 'sag@suppliers.co.il', '03-5550014', 'ספק אינסטלציה משלים'],
+    ['אורבונד', 'ORBOND', 'חומרי בנייה', 'orbond@suppliers.co.il', '03-5550015', 'ספק חומרי הדבקה ובנייה'],
+    ['בוש', 'BOSCH', 'כלי עבודה', 'bosch@suppliers.co.il', '03-5550016', 'ספק כלי עבודה חשמליים'],
+    ['מקיטה', 'MAKITA', 'כלי עבודה', 'makita@suppliers.co.il', '03-5550017', 'ספק כלי עבודה חשמליים'],
+    ['סטנלי', 'STANLEY', 'כלי עבודה', 'stanley@suppliers.co.il', '03-5550018', 'ספק כלי עבודה ואביזרים'],
+    ['שטל', 'STTL', 'כלי עבודה', 'shtal@suppliers.co.il', '03-5550019', 'ספק כלי עבודה ידניים'],
+  ];
+
+  const normalizeLegacySuppliersStmt = db.prepare(
+    `UPDATE suppliers
+     SET supplier_name = ?,
+         supplier_code = ?,
+         product_category = ?,
+         email = ?,
+         phone = ?,
+         notes = ?
+     WHERE supplier_name = ? OR supplier_code = ?`
+  );
+  seedSuppliers.forEach(([supplierName, supplierCode, productCategory, email, phone, notes]) => {
+    normalizeLegacySuppliersStmt.run([supplierName, supplierCode, productCategory, email, phone, notes, supplierCode, supplierCode]);
+  });
+  normalizeLegacySuppliersStmt.finalize();
+
+  const seedSuppliersStmt = db.prepare(
+    `INSERT OR IGNORE INTO suppliers (supplier_name, supplier_code, product_category, email, phone, notes)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  );
+  seedSuppliers.forEach((supplier) => {
+    seedSuppliersStmt.run(supplier);
+  });
+  seedSuppliersStmt.finalize();
+
+  const seedSuppliersBackfillStmt = db.prepare(
+    `UPDATE suppliers
+     SET supplier_code = ?,
+         product_category = ?,
+         email = ?,
+         phone = ?,
+         notes = ?
+     WHERE supplier_name = ?`
+  );
+  seedSuppliers.forEach(([supplierName, supplierCode, productCategory, email, phone, notes]) => {
+    seedSuppliersBackfillStmt.run([supplierCode, productCategory, email, phone, notes, supplierName]);
+  });
+  seedSuppliersBackfillStmt.finalize();
 
   const seedInventory = [
     ['paint-wall-white-18l', 'צבע לקיר לבן 18 ליטר', 'צבע', 42, 8],
@@ -124,6 +250,45 @@ db.serialize(() => {
     seedInventoryStmt.run(item);
   });
   seedInventoryStmt.finalize();
+
+  const supplierAssignmentsByProductId = {
+    'paint-wall-white-18l': 'NIRLAT',
+    'base-paint': 'YAACOB',
+    'paint-brush-set': 'YAACOB',
+    'paint-roller': 'YAACOB',
+    'lime-whitewash': 'NIRLAT',
+    'concrete-block': 'PARNESHER',
+    'cement-bag': 'THERMOKIR',
+    'sand-bag': 'PARNESHER',
+    'gravel-bag': 'PARNESHER',
+    'gypsum-board': 'ORBOND',
+    'silicone-adhesive': 'SIKA',
+    'super7-adhesive': 'MRFIX',
+    'super5-silicone': 'MRFIX',
+    'niroplast': 'MRFIX',
+    'faucet': 'HAMAT',
+    'sink-trap': 'FLOOD',
+    'plumbing-set': 'SPPIPE',
+    'electrical-wire': 'NISKO',
+    'extension-cable': 'NISKO',
+    'electric-drill': 'MAKITA',
+    'screw-set': 'STANLEY',
+    'screwdriver-set': 'STANLEY',
+    'putty-set': 'STTL',
+    'garden-supplies': 'BIGIBOND',
+  };
+
+  Object.entries(supplierAssignmentsByProductId).forEach(([productId, supplierCode]) => {
+    db.run(
+      `UPDATE inventory_items
+       SET supplier_id = (
+         SELECT id FROM suppliers WHERE supplier_code = ?
+       )
+       WHERE product_id = ?`,
+      [supplierCode, productId],
+      () => {}
+    );
+  });
 });
 
 module.exports = db;

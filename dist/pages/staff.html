@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>אזור עובדים - נבלט בע״מ</title>
-  <script type="module" crossorigin src="../assets/js/pages/staff.js"></script>
-  <link rel="modulepreload" crossorigin href="../assets/js/main.js">
+  <script type="module" crossorigin src="../assets/js/main.js"></script>
+  <script type="module" crossorigin src="../assets/js/staff.js"></script>
   <link rel="stylesheet" crossorigin href="../assets/css/main.css">
 </head>
 
@@ -22,12 +22,11 @@
 
       <div class="mx-auto d-lg-block d-none">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
-          <li class="nav-item"><a class="nav-link" href="about.html">אודות</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.html">מוצרים</a></li>
-          <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
-          <li class="nav-item"><a class="nav-link" href="account.html">אזור אישי</a></li>
-          <li class="nav-item"><a class="nav-link" href="login.html">התחבר</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="staff.html">אזור עובדים</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-inventory.html">מלאי החנות</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-new-product.html">הוספת מוצר חדש</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-work-hours.html">תיעוד שעות עבודה</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-work-report.html">דו"ח שעות עבודה</a></li>
         </ul>
       </div>
 
@@ -56,12 +55,12 @@
           <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
             <div>
               <p class="text-uppercase text-xs fw-semibold text-muted mb-2">אזור עובדים</p>
-              <h1 class="display-6 mb-2">ניהול מלאי, מוצרים ותפעול שוטף</h1>
+              <h1 class="display-6 mb-2">מסך הבית של עובדי החנות</h1>
               <p id="staffUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
             </div>
             <div class="d-flex gap-2">
-              <a href="products.html" class="btn btn-outline-dark">למוצרים</a>
-              <a href="account.html" class="btn btn-outline-secondary">לאזור אישי</a>
+              <a href="staff-inventory.html" class="btn btn-outline-dark">למלאי החנות</a>
+              <a href="staff-work-hours.html" class="btn btn-outline-secondary">לתיעוד שעות</a>
             </div>
           </div>
 
@@ -70,100 +69,74 @@
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">פריטי מלאי</div>
-                <div id="staffSkuCount" class="display-6 fw-semibold">0</div>
+                <div class="text-muted small mb-1">מלאי החנות</div>
+                <div class="h3 mb-2">ניהול מלאי</div>
+                <p class="text-muted mb-3">עדכון כמויות, עריכת פריטים ומעקב אחרי סטטוס המלאי.</p>
+                <a href="staff-inventory.html" class="btn btn-outline-dark btn-sm">מעבר למסך</a>
               </div>
             </div>
             <div class="col-md-4">
               <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">מלאי נמוך</div>
-                <div id="staffLowStockCount" class="display-6 fw-semibold">0</div>
+                <div class="text-muted small mb-1">הוספת מוצר חדש</div>
+                <div class="h3 mb-2">פתיחת פריט</div>
+                <p class="text-muted mb-3">הקמת מוצר חדש במערכת עם פרטי קטגוריה, מלאי ומיקום.</p>
+                <a href="staff-new-product.html" class="btn btn-outline-dark btn-sm">להוספה</a>
               </div>
             </div>
             <div class="col-md-4">
               <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">ללא מלאי</div>
-                <div id="staffOutOfStockCount" class="display-6 fw-semibold">0</div>
+                <div class="text-muted small mb-1">שעות עבודה</div>
+                <div class="h3 mb-2">תיעוד ודוח</div>
+                <p class="text-muted mb-3">כניסה, יציאה, הערות משמרת וייצוא דו"ח שעות.</p>
+                <a href="staff-work-report.html" class="btn btn-outline-secondary btn-sm">לדו"ח</a>
               </div>
             </div>
           </div>
 
           <div class="row g-4">
-            <div class="col-lg-8">
+            <div class="col-lg-7">
               <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">מלאי החנות</h2>
-                  <span class="text-muted small">עדכון כמויות בזמן אמת</span>
-                </div>
-                <div class="table-responsive">
-                  <table class="table align-middle inventory-table mb-0">
-                    <thead>
-                      <tr>
-                        <th>מוצר</th>
-                        <th>קטגוריה</th>
-                        <th>כמות</th>
-                        <th>יעד מינימום</th>
-                        <th>סטטוס</th>
-                        <th>פעולות</th>
-                      </tr>
-                    </thead>
-                    <tbody id="inventoryTableBody"></tbody>
-                  </table>
+                <h2 class="h5 mb-3">המסכים הזמינים לעובד</h2>
+                <div class="list-group list-group-flush">
+                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-inventory.html">
+                    <span>
+                      <span class="fw-semibold d-block">מלאי החנות</span>
+                      <span class="text-muted small">צפייה, עדכון, הפחתה והוספה של מלאי</span>
+                    </span>
+                    <span class="badge text-bg-dark">פתח</span>
+                  </a>
+                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-new-product.html">
+                    <span>
+                      <span class="fw-semibold d-block">הוספת מוצר חדש</span>
+                      <span class="text-muted small">פתיחת מוצר חדש במערכת עם כל פרטי הבסיס</span>
+                    </span>
+                    <span class="badge text-bg-dark">פתח</span>
+                  </a>
+                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-hours.html">
+                    <span>
+                      <span class="fw-semibold d-block">תיעוד שעות עבודה</span>
+                      <span class="text-muted small">כניסה, יציאה, הערות משמרת ושמירת נוכחות</span>
+                    </span>
+                    <span class="badge text-bg-dark">פתח</span>
+                  </a>
+                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-report.html">
+                    <span>
+                      <span class="fw-semibold d-block">דו"ח שעות עבודה</span>
+                      <span class="text-muted small">צפייה וייצוא של נתוני העבודה</span>
+                    </span>
+                    <span class="badge text-bg-dark">פתח</span>
+                  </a>
                 </div>
               </div>
             </div>
-            <div class="col-lg-4">
-              <div class="bg-white border rounded-4 p-4 h-100 mb-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">תנועות מלאי אחרונות</h2>
-                </div>
-                <ul id="inventoryMovementsList" class="list-unstyled mb-0"></ul>
-              </div>
-              <div class="bg-white border rounded-4 p-4 h-100 mb-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">הוספה / עדכון מוצר</h2>
-                </div>
-                <form id="inventoryForm" class="row g-3">
-                  <div class="col-12">
-                    <label class="form-label">מזהה מוצר</label>
-                    <input id="inventoryProductId" name="productId" class="form-control" placeholder="לדוגמה: paint-roller" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">שם מוצר</label>
-                    <input id="inventoryProductName" name="productName" class="form-control" placeholder="שם המוצר" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">קטגוריה</label>
-                    <select id="inventoryCategory" name="category" class="form-select" required>
-                      <option value="צבע">צבע</option>
-                      <option value="אינסטלציה">אינסטלציה</option>
-                      <option value="חומרי בנייה">חומרי בנייה</option>
-                      <option value="חשמל">חשמל</option>
-                      <option value="כלי עבודה">כלי עבודה</option>
-                      <option value="גינון">גינון</option>
-                    </select>
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label">מלאי</label>
-                    <input id="inventoryStock" name="stock" type="number" min="0" class="form-control" value="0" required>
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label">מינימום</label>
-                    <input id="inventoryMinStock" name="minStock" type="number" min="0" class="form-control" value="5" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">מיקום</label>
-                    <input id="inventoryLocation" name="location" class="form-control" value="מחסן ראשי" required>
-                  </div>
-                  <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary" id="inventorySaveBtn">שמירת מוצר</button>
-                    <button type="button" class="btn btn-outline-secondary" id="inventoryResetBtn">ניקוי טופס</button>
-                  </div>
-                </form>
-              </div>
-              <div id="managerPanel" class="bg-white border rounded-4 p-4 h-100 d-none">
-                <h2 class="h5 mb-3">לוח מנהל</h2>
-                <p class="text-muted mb-0">כאן נמשיך לבנות בהמשך ניהול עובדים, הרשאות, דו"חות ורכש מספקים.</p>
+            <div class="col-lg-5">
+              <div class="bg-white border rounded-4 p-4 h-100">
+                <h2 class="h5 mb-3">הנחיות קצרות</h2>
+                <ul class="text-muted mb-0">
+                  <li class="mb-2">כל מסך פועל עכשיו כעמוד עצמאי.</li>
+                  <li class="mb-2">הפעולות התפעוליות נשמרות לפי המשתמש המחובר.</li>
+                  <li class="mb-2">אפשר לחזור תמיד לכאן דרך "אזור עובדים".</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -185,11 +158,11 @@
     <div class="offcanvas-body">
       <div class="navbar-custom">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
-          <li class="nav-item"><a class="nav-link" href="about.html">אודות</a></li>
-          <li class="nav-item"><a class="nav-link" href="products.html">מוצרים</a></li>
-          <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
-          <li class="nav-item"><a class="nav-link" href="account.html">אזור אישי</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="staff.html">אזור עובדים</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-inventory.html">מלאי החנות</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-new-product.html">הוספת מוצר חדש</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-work-hours.html">תיעוד שעות עבודה</a></li>
+          <li class="nav-item"><a class="nav-link" href="staff-work-report.html">דו"ח שעות עבודה</a></li>
         </ul>
       </div>
     </div>
