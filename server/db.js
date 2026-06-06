@@ -58,7 +58,11 @@ db.serialize(() => {
   `);
   db.run('ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT \'new\'', () => {});
   db.run('ALTER TABLE orders ADD COLUMN staff_notes TEXT NOT NULL DEFAULT \'\'', () => {});
-  db.run('ALTER TABLE orders ADD COLUMN updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP', () => {});
+  db.run('ALTER TABLE orders ADD COLUMN updated_at TEXT', () => {});
+  db.run(
+    'UPDATE orders SET updated_at = COALESCE(updated_at, created_at, CURRENT_TIMESTAMP)',
+    () => {}
+  );
 
   db.run(`
     CREATE TABLE IF NOT EXISTS order_items (

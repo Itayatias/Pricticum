@@ -401,8 +401,8 @@ app.post('/api/cart/checkout', (req, res) => {
           const initialStatus = normalizeCustomerOrderStatus('new');
 
           db.run(
-            `INSERT INTO orders (user_id, total_amount, status, staff_notes)
-             VALUES (?, ?, ?, ?)`,
+            `INSERT INTO orders (user_id, total_amount, status, staff_notes, updated_at)
+             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [numericUserId, total, initialStatus, ''],
             function onOrderInsert(orderErr) {
               if (orderErr) return res.status(500).json({ message: 'Failed to create order' });
