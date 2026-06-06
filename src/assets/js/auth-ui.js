@@ -97,6 +97,28 @@ function getAuthControls() {
   return controls;
 }
 
+function getDashboardControls() {
+  const controls = [];
+  const navLists = document.querySelectorAll('.navbar-nav');
+
+  navLists.forEach((list) => {
+    let link = list.querySelector('a[data-auth-control="dashboard"]');
+
+    if (!link) {
+      link = list.querySelector('a[href$="account.html"]');
+    }
+
+    if (!link) {
+      return;
+    }
+
+    link.setAttribute('data-auth-control', 'dashboard');
+    controls.push(link);
+  });
+
+  return controls;
+}
+
 function getLogoutControls() {
   const controls = [];
   const navLists = document.querySelectorAll('.navbar-nav');
@@ -140,27 +162,6 @@ function applyLoggedOutState(link) {
   link.onclick = null;
 }
 
-function applyLoggedInState(link, user) {
-  const dashboardLabel = getRoleLabel(user.role);
-  const dashboardHref = getDashboardHref(user.role);
-  link.textContent = dashboardLabel;
-  link.setAttribute('title', `מחובר כ-${user.fullName}. מעבר ל-${dashboardLabel}`);
-  link.setAttribute('href', dashboardHref);
-  link.classList.remove('text-danger');
-  link.classList.add('fw-semibold');
-  link.classList.toggle(
-    'active',
-    window.location.pathname.includes('/account.html') ||
-      window.location.pathname.includes('/staff.html') ||
-      window.location.pathname.includes('/manager.html') ||
-      window.location.pathname.includes('/manager-users.html') ||
-      window.location.pathname.includes('/manager-suppliers.html') ||
-      window.location.pathname.includes('/manager-inventory.html') ||
-      window.location.pathname.includes('/manager-reports.html')
-  );
-  link.onclick = null;
-}
-
 function applyLogoutState(link, user) {
   link.textContent = 'התנתקות';
   link.setAttribute('title', `מחובר כ-${user.fullName}. לחץ להתנתקות`);
@@ -174,26 +175,49 @@ function applyLogoutState(link, user) {
   };
 }
 
+function applyDashboardState(link, user) {
+  const dashboardLabel = getRoleLabel(user.role);
+  const dashboardHref = getDashboardHref(user.role);
+  link.textContent = dashboardLabel;
+  link.setAttribute('title', `מחובר כ-${user.fullName}. מעבר ל-${dashboardLabel}`);
+  link.setAttribute('href', dashboardHref);
+  link.classList.remove('text-danger');
+  link.classList.add('fw-semibold');
+  link.hidden = false;
+  link.classList.toggle(
+    'active',
+    window.location.pathname.includes('/account.html') ||
+      window.location.pathname.includes('/staff.html') ||
+      window.location.pathname.includes('/manager.html') ||
+      window.location.pathname.includes('/manager-users.html') ||
+      window.location.pathname.includes('/manager-suppliers.html') ||
+      window.location.pathname.includes('/manager-inventory.html') ||
+      window.location.pathname.includes('/manager-reports.html')
+  );
+  link.onclick = null;
+}
+
 function updateNavAuthState() {
   const user = getAuthUser();
   const controls = getAuthControls();
-  const logoutControls = getLogoutControls();
+  const dashboardControls = getDashboardControls();
 
   controls.forEach((link) => {
     if (!user || !user.fullName) {
       applyLoggedOutState(link);
       return;
     }
-    applyLoggedInState(link, user);
+    applyLogoutState(link, user);
   });
 
-  logoutControls.forEach(({ item, link }) => {
+  dashboardControls.forEach((link) => {
     if (!user || !user.fullName) {
-      item.remove();
+      link.hidden = true;
+      link.onclick = null;
       return;
     }
 
-    applyLogoutState(link, user);
+    applyDashboardState(link, user);
   });
 }
 

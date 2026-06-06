@@ -3,163 +3,169 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>התחברות והרשמה - נבלט בע"מ</title>
+    <title>התחברות והרשמה - נבלט בע״מ</title>
     <script type="module" crossorigin src="../assets/js/pages/login.js"></script>
     <link rel="modulepreload" crossorigin href="../assets/js/main.js">
     <link rel="stylesheet" crossorigin href="../assets/css/main.css">
   </head>
-  <body>
+
+  <body class="site-shell">
     <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
       <div class="container-fluid px-0">
         <a class="navbar-brand" href="../index.html">
           <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
             <span style="letter-spacing: .12rem;">
-              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;">
+              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
             </span>
           </span>
         </a>
+
         <div class="mx-auto d-lg-block d-none">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
-            <li class="nav-item"><a class="nav-link" href="about.html">אודות</a></li>
             <li class="nav-item"><a class="nav-link" href="products.html">מוצרים</a></li>
-            <li class="nav-item"><a class="nav-link" href="testimonials.html">המלצות</a></li>
             <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
-            <li class="nav-item"><a class="nav-link active" aria-current="page" href="login.html">התחברות</a></li>
+            <li class="nav-item"><a class="nav-link" href="account.html" data-auth-control="dashboard" hidden>אזור אישי</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="login.html" data-auth-control="primary">התחברות</a></li>
           </ul>
+        </div>
+
+        <div class="d-flex align-items-center gap-4">
+          <a href="products.html#cart-section" class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link" data-bs-toggle="tooltip" data-bs-placement="bottom" title="מעבר לסל הקניות שלך">
+            <span><i class="bi bi-cart3"></i></span>
+            <span>סל לקוח: <span class="header-cart-count">0</span></span>
+          </a>
+          <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+            </svg>
+          </a>
         </div>
       </div>
     </nav>
 
-    <main class="py-5 py-lg-9">
+    <main class="section-shell">
       <section class="container">
         <div class="row justify-content-center">
           <div class="col-lg-7 col-xl-6">
-            <div class="card shadow-sm border-0">
-              <div class="card-body p-4 p-lg-5">
-                <h1 class="h3 mb-3 text-center">כניסה למערכת</h1>
-                <p class="text-muted text-center mb-4">אפשר להתחבר לחשבון קיים או לבצע הרשמה חדשה.</p>
+            <div class="auth-card auth-card--xl">
+              <div class="auth-hero mb-4">
+                <div class="section-kicker mb-2">כניסה למערכת</div>
+                <h1 class="h3 mb-2">התחברות, הרשמה וניהול הרשאות</h1>
+                <p class="text-muted mb-0">לקוחות נכנסים למסך האישי, וכשמחוברים יראו "התנתקות" במקום התחברות.</p>
+              </div>
 
-                <div class="d-flex gap-2 mb-4">
-                  <button type="button" class="btn btn-dark w-50" id="showLoginBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס התחברות קיים">התחברות</button>
-                  <button type="button" class="btn btn-outline-dark w-50" id="showRegisterBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס פתיחת חשבון חדש">הרשמה</button>
+              <div class="d-flex gap-2 mb-4">
+                <button type="button" class="btn btn-dark w-50" id="showLoginBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס התחברות קיים">התחברות</button>
+                <button type="button" class="btn btn-outline-dark w-50" id="showRegisterBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="מעבר לטופס פתיחת חשבון חדש">הרשמה</button>
+              </div>
+
+              <div id="authMessage" class="alert d-none" role="alert"></div>
+
+              <form id="loginForm" class="mb-4">
+                <div class="mb-3">
+                  <label for="loginEmail" class="form-label">אימייל</label>
+                  <input id="loginEmail" name="email" type="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label for="loginPassword" class="form-label">סיסמה</label>
+                  <input id="loginPassword" name="password" type="password" class="form-control" minlength="6" required />
+                </div>
+                <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תבדוק את פרטי ההתחברות שלך">התחבר</button>
+              </form>
+
+              <form id="registerForm" class="d-none mb-4">
+                <div class="mb-3">
+                  <label for="registerFullName" class="form-label">שם מלא</label>
+                  <input id="registerFullName" name="fullName" type="text" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label for="registerEmail" class="form-label">אימייל</label>
+                  <input id="registerEmail" name="email" type="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label for="registerPassword" class="form-label">סיסמה</label>
+                  <input id="registerPassword" name="password" type="password" class="form-control" minlength="6" required />
+                </div>
+                <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תשמור אותך במערכת כלקוח חדש">צור חשבון</button>
+              </form>
+
+              <div class="surface-card p-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 align-items-lg-center mb-3">
+                  <div>
+                    <h2 class="h5 mb-1">הרשאות לפי תפקיד</h2>
+                    <p class="text-muted mb-0">לאחר ההתחברות המערכת מפנה את המשתמש למסך המתאים בלבד, בהתאם לתפקיד שלו.</p>
+                  </div>
+                  <span class="badge text-bg-dark align-self-start align-self-lg-center">ניהול הרשאות</span>
                 </div>
 
-                <div id="authMessage" class="alert d-none" role="alert"></div>
-
-                <form id="loginForm">
-                  <div class="mb-3">
-                    <label for="loginEmail" class="form-label">אימייל</label>
-                    <input id="loginEmail" name="email" type="email" class="form-control" required />
-                  </div>
-                  <div class="mb-3">
-                    <label for="loginPassword" class="form-label">סיסמה</label>
-                    <input id="loginPassword" name="password" type="password" class="form-control" minlength="6" required />
-                  </div>
-                  <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תבדוק את פרטי ההתחברות שלך">התחבר</button>
-                </form>
-
-                <form id="registerForm" class="d-none">
-                  <div class="mb-3">
-                    <label for="registerFullName" class="form-label">שם מלא</label>
-                    <input id="registerFullName" name="fullName" type="text" class="form-control" required />
-                  </div>
-                  <div class="mb-3">
-                    <label for="registerEmail" class="form-label">אימייל</label>
-                    <input id="registerEmail" name="email" type="email" class="form-control" required />
-                  </div>
-                  <div class="mb-3">
-                    <label for="registerPassword" class="form-label">סיסמה</label>
-                    <input id="registerPassword" name="password" type="password" class="form-control" minlength="6" required />
-                  </div>
-                  <button type="submit" class="btn btn-dark w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="לחיצה תשמור אותך במערכת כלקוח חדש">צור חשבון</button>
-                </form>
-
-                <hr class="my-4" />
-
-                <div class="bg-light border rounded-4 p-4">
-                  <div class="d-flex flex-column flex-lg-row justify-content-between gap-2 align-items-lg-center mb-3">
-                    <div>
-                      <h2 class="h5 mb-1">הרשאות לפי תפקיד</h2>
-                      <p class="text-muted mb-0">לאחר ההתחברות המערכת מפנה את המשתמש למסך המתאים בלבד, בהתאם לתפקיד שלו.</p>
-                    </div>
-                    <span class="badge text-bg-dark align-self-start align-self-lg-center">ניהול הרשאות</span>
-                  </div>
-
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                      <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                          <h3 class="h6">לקוח</h3>
-                          <p class="text-muted small mb-3">ממשק נפרד לרכישה, מעקב הזמנות ופרטי חשבון.</p>
-                          <ul class="list-unstyled small mb-0">
-                            <li>• קטלוג, עגלה, הזמנות ומעקב משלוחים</li>
-                            <li>• החשבון שלי וכתובות משלוח</li>
-                            <li>• פנייה לחנות ובקשת הצעת מחיר</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                          <h3 class="h6">עובד חנות</h3>
-                          <p class="text-muted small mb-3">ממשק תפעולי לקופה, מלאי, הזמנות ושירות לקוחות.</p>
-                          <ul class="list-unstyled small mb-0">
-                            <li>• משימות יומיות, הזמנות לטיפול ופעולות קופה</li>
-                            <li>• חיפוש לקוח/מוצר, עדכון מלאי וקליטת סחורה</li>
-                            <li>• ניהול הזמנות ומשלוחים ושירות לקוחות</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                          <h3 class="h6">מנהל / אדמיניסטרציה</h3>
-                          <p class="text-muted small mb-3">ממשק ניהולי מלא עם גישה לדוחות, עובדים, ספקים ולקוחות.</p>
-                          <ul class="list-unstyled small mb-0">
-                            <li>• דשבורד, מלאי, ספקים ולקוחות</li>
-                            <li>• דוחות, ניהול עובדים והרשאות</li>
-                            <li>• הגדרות מערכת, גיבויים ולוג פעילות</li>
-                          </ul>
-                        </div>
-                      </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-4">
+                    <div class="surface-card p-3 h-100">
+                      <h3 class="h6">לקוח</h3>
+                      <p class="text-muted small mb-3">ממשק נפרד לרכישה, מעקב הזמנות ופרטי חשבון.</p>
+                      <ul class="list-unstyled small mb-0">
+                        <li>• קטלוג, עגלה, הזמנות ומעקב משלוחים</li>
+                        <li>• החשבון שלי וכתובות משלוח</li>
+                        <li>• פנייה לחנות ובקשת הצעת מחיר</li>
+                      </ul>
                     </div>
                   </div>
-
-                  <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                      <thead>
-                        <tr>
-                          <th>פעולה</th>
-                          <th class="text-center">לקוח</th>
-                          <th class="text-center">עובד</th>
-                          <th class="text-center">מנהל</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>צפייה במוצרים וביצוע הזמנה</td>
-                          <td class="text-center">✔</td>
-                          <td class="text-center">✔</td>
-                          <td class="text-center">✔</td>
-                        </tr>
-                        <tr>
-                          <td>פתיחת תיק לקוח, עדכון מלאי ופעולות תפעול</td>
-                          <td class="text-center">✖</td>
-                          <td class="text-center">✔</td>
-                          <td class="text-center">✔</td>
-                        </tr>
-                        <tr>
-                          <td>דוחות, רכש, עובדים, ספקים והגדרות מערכת</td>
-                          <td class="text-center">✖</td>
-                          <td class="text-center">✖</td>
-                          <td class="text-center">✔</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div class="col-md-4">
+                    <div class="surface-card p-3 h-100">
+                      <h3 class="h6">עובד חנות</h3>
+                      <p class="text-muted small mb-3">ממשק תפעולי לקופה, מלאי, הזמנות ושירות לקוחות.</p>
+                      <ul class="list-unstyled small mb-0">
+                        <li>• משימות יומיות, הזמנות לטיפול ופעולות קופה</li>
+                        <li>• חיפוש לקוח/מוצר, עדכון מלאי וקליטת סחורה</li>
+                        <li>• ניהול הזמנות ומשלוחים ושירות לקוחות</li>
+                      </ul>
+                    </div>
                   </div>
+                  <div class="col-md-4">
+                    <div class="surface-card p-3 h-100">
+                      <h3 class="h6">מנהל / אדמיניסטרציה</h3>
+                      <p class="text-muted small mb-3">ממשק ניהולי מלא עם גישה לדוחות, עובדים, ספקים ולקוחות.</p>
+                      <ul class="list-unstyled small mb-0">
+                        <li>• דשבורד, מלאי, ספקים ולקוחות</li>
+                        <li>• דוחות, ניהול עובדים והרשאות</li>
+                        <li>• הגדרות מערכת, גיבויים ולוג פעילות</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>פעולה</th>
+                        <th class="text-center">לקוח</th>
+                        <th class="text-center">עובד</th>
+                        <th class="text-center">מנהל</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>צפייה במוצרים וביצוע הזמנה</td>
+                        <td class="text-center">✔</td>
+                        <td class="text-center">✔</td>
+                        <td class="text-center">✔</td>
+                      </tr>
+                      <tr>
+                        <td>פתיחת תיק לקוח, עדכון מלאי ופעולות תפעול</td>
+                        <td class="text-center">✖</td>
+                        <td class="text-center">✔</td>
+                        <td class="text-center">✔</td>
+                      </tr>
+                      <tr>
+                        <td>דוחות, רכש, עובדים, ספקים והגדרות מערכת</td>
+                        <td class="text-center">✖</td>
+                        <td class="text-center">✖</td>
+                        <td class="text-center">✔</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -167,6 +173,77 @@
         </div>
       </section>
     </main>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+      <div class="offcanvas-header px-4">
+        <a class="navbar-brand" href="../index.html">
+          <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+            <span style="letter-spacing: .12rem;">
+              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
+            </span>
+          </span>
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="navbar-custom">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
+            <li class="nav-item"><a class="nav-link" href="products.html">מוצרים</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
+            <li class="nav-item"><a class="nav-link" href="account.html" data-auth-control="dashboard" hidden>אזור אישי</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="login.html" data-auth-control="primary">התחברות</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-dark pt-8 footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4 col-md-4 col-12">
+            <a class="navbar-brand" href="../index.html">
+              <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+                <span style="letter-spacing: .12rem;">
+                  <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
+                </span>
+              </span>
+            </a>
+          </div>
+          <div class="col-lg-8 col-md-6 mb-4 d-flex justify-content-start justify-content-md-end gy-4">
+            <ul class="list-unstyled lh-lg d-flex flex-column flex-md-row gap-4">
+              <li><a href="../index.html" class="ft-links text-decoration-none">דף הבית</a></li>
+              <li><a href="./products.html" class="ft-links text-decoration-none">מוצרים</a></li>
+              <li><a href="./contact.html" class="ft-links text-decoration-none">צור קשר</a></li>
+              <li><a href="./account.html" class="ft-links text-decoration-none">אזור אישי</a></li>
+            </ul>
+          </div>
+          <div class="row justify-content-center align-items-center py-lg-8">
+            <div class="col-lg-6 col-md-6 mb-4">
+              <div class="d-flex flex-column">
+                <span>דוא"ל</span>
+                <span class="h3 fw-light">info@nevelat.co.il</span>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-4">
+              <div class="d-flex gap-3 justify-content-lg-end">
+                <a href="./contact.html" class="btn btn-outline-light">יצירת קשר</a>
+              </div>
+            </div>
+          </div>
+          <hr class="bg-secondary" />
+          <div class="row pb-3">
+            <div class="col-md-6 text-center text-md-start">
+              <p class="mb-0">&copy; 2025 נבלט בע״מ. כל הזכויות שמורות.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+              <a href="#" class="ft-links text-decoration-none me-3">מדיניות פרטיות</a>
+              <a href="#" class="ft-links text-decoration-none">תנאי שימוש</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
 
   </body>
 </html>

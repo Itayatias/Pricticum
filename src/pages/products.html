@@ -1,179 +1,139 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>מוצרים - נבלט בע״מ</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>מוצרים - נבלט בע״מ</title>
-
-</head>
-
-<body class="font-sans text-gray-800">
-
-  <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
-    <div class="container-fluid px-0">
-      <a class="navbar-brand" href="../index.html">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span class="" style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט"
-              class="img-fluid" style="max-height: 50px;"></span>
-        </span></a>
-
-      <div class="mx-auto  d-lg-block d-none">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="../index.html">דף הבית</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="about.html">אודות</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="products.html">מוצרים</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="testimonials.html">המלצות</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link " href="contact.html">צור קשר</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link " href="login.html">התחבר</a>
-          </li>
-
-        </ul>
-      </div>
-      <div class="d-flex align-items-center gap-4">
-        <a href="#cart-section"
-          class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link"
-          data-bs-toggle="tooltip" data-bs-placement="bottom" title="מעבר לסל הקניות שלך">
-          <span><i class="bi bi-cart3"></i></span>
-          <span>סל לקוח: <span class="header-cart-count">0</span></span>
-        </a>
-        <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list"
-            viewBox="0 0 16 16">
-            <path fill-rule="evenodd"
-              d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-          </svg>
+  <body class="site-shell">
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
+      <div class="container-fluid px-0">
+        <a class="navbar-brand" href="../index.html">
+          <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+            <span style="letter-spacing: .12rem;">
+              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
+            </span>
+          </span>
         </a>
 
-      </div>
-    </div>
-  </nav>
-  <main>
-    <section class="py-lg-8 py-5 text-center">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-6">
-            <h1 class="display-5 mb-3">קטלוג מוצרים</h1>
-            <p class="text-muted  lead">
-              גלה את מגוון המוצרים האיכותיים שלנו, החל מחומרי בנייה וכלה בכלי עבודה וציוד גינה. כל מה שאתה צריך
-              לפרויקט הבא שלך במקום אחד נוח.
-            </p>
-          </div>
+        <div class="mx-auto d-lg-block d-none">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="products.html">מוצרים</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
+            <li class="nav-item"><a class="nav-link" href="account.html" data-auth-control="dashboard" hidden>אזור אישי</a></li>
+            <li class="nav-item"><a class="nav-link" href="login.html" data-auth-control="primary">התחברות</a></li>
+          </ul>
+        </div>
+
+        <div class="d-flex align-items-center gap-4">
+          <a
+            href="#cart-section"
+            class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link"
+            data-bs-toggle="tooltip"
+            data-bs-placement="bottom"
+            title="מעבר לסל הקניות שלך"
+          >
+            <span><i class="bi bi-cart3"></i></span>
+            <span>סל לקוח: <span class="header-cart-count">0</span></span>
+          </a>
+          <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+            </svg>
+          </a>
         </div>
       </div>
-    </section>
-    <!-- Page Content -->
-    <section class="py-lg-8 py-5">
-      <div class="container ">
-        <div class="row">
-          <!-- Sidebar סינון -->
-          <aside class="col-lg-3 mb-4">
-            <h3 class="fw-semibold mb-3 h5 ">סינון</h3>
-            <div class="mb-4 bg-light border bg-opacity-50 p-4">
-              <h6 class="fw-semibold mb-3 text-xs text-uppercase">קטגוריה</h6>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat1" value="חומרי בנייה">
-                <label class="form-check-label" for="cat1">חומרי בנייה</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat2" value="צבע">
-                <label class="form-check-label" for="cat2">צבע</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat3" value="אינסטלציה">
-                <label class="form-check-label" for="cat3">אינסטלציה</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat4" value="חשמל">
-                <label class="form-check-label" for="cat4">חשמל</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat5" value="כלי עבודה">
-                <label class="form-check-label" for="cat5">כלי עבודה</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-category" type="checkbox" id="cat6" value="גינון">
-                <label class="form-check-label" for="cat6">גינון</label>
-              </div>
-            </div>
-            <div class="mb-4 bg-light border bg-opacity-50 p-4">
-              <h6 class="fw-semibold mb-3 text-xs text-uppercase">מחיר</h6>
-              <div class="form-check">
-                <input class="form-check-input filter-price" type="checkbox" id="price1" value="low">
-                <label class="form-check-label " for="price1">עד 100₪ </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-price" type="checkbox" id="price2" value="mid">
-                <label class="form-check-label" for="price2">100₪ - 300₪</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-price" type="checkbox" id="price3" value="high">
-                <label class="form-check-label" for="price3">מעל 300₪ </label>
-              </div>
-            </div>
-            <div class="mb-4 bg-light border bg-opacity-50 p-4">
-              <h6 class="fw-semibold mb-3 text-xs text-uppercase">צבע</h6>
-              <div class="form-check">
-                <input class="form-check-input filter-color" type="checkbox" id="col1" value="לבן">
-                <label class="form-check-label" for="col1">לבן</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-color" type="checkbox" id="col2" value="אפור">
-                <label class="form-check-label" for="col2">אפור</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-color" type="checkbox" id="col3" value="שחור">
-                <label class="form-check-label" for="col3">שחור</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-color" type="checkbox" id="col4" value="אדום">
-                <label class="form-check-label" for="col4">אדום</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-color" type="checkbox" id="col5" value="כחול">
-                <label class="form-check-label" for="col5">כחול</label>
-              </div>
-            </div>
-            <div class="d-grid">
-              <button id="applyFiltersBtn" class="btn btn-primary" type="button">החל סינון</button>
-            </div>
-            <div id="cart-section" class="mt-4 bg-light border bg-opacity-50 p-4">
-              <h6 class="fw-semibold mb-3 text-xs text-uppercase">סל קניות</h6>
-              <p id="cartUserMessage" class="small text-muted mb-3">יש להתחבר כדי להוסיף מוצרים לסל.</p>
-              <ul id="cartItemsList" class="list-unstyled small mb-3"></ul>
-              <div class="d-flex justify-content-between fw-semibold mb-3">
-                <span>סה"כ</span>
-                <span id="cartTotal">₪ 0.00</span>
-              </div>
-              <button id="checkoutBtn" class="btn btn-dark btn-sm w-100" type="button" data-bs-toggle="tooltip"
-                data-bs-placement="top" title="לחיצה תיצור הזמנה ותנקה את הסל">ביצוע הזמנה</button>
-            </div>
-            <div class="mt-4 bg-light border bg-opacity-50 p-4">
-              <h6 class="fw-semibold mb-3 text-xs text-uppercase">היסטוריית הזמנות</h6>
-              <ul id="orderHistoryList" class="list-unstyled small mb-0"></ul>
-            </div>
-          </aside>
+    </nav>
 
-          <!-- Product Grid -->
-          <div class="col-lg-9">
-            <div class="row g-4" id="productsGrid">
-              <div class="col-12">
-                <div class=" d-flex flex-column flex-lg-row flex-row justify-content-between gap-4">
+    <main>
+      <section class="page-hero page-hero--compact text-center">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-7">
+              <div class="page-hero__eyebrow mb-3">קטלוג החנות</div>
+              <h1 class="display-5 mb-3">מוצרים מסודרים, נוחים לסינון ומוכנים להזמנה</h1>
+              <p class="text-muted lead mb-0">
+                קטלוג נקי ומדויק לחומרי בנייה, צבע, אינסטלציה, חשמל וכלי עבודה. מוצאים מהר, מסננים בקלות ומזמינים בלי רעש מיותר.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-                  <div class="col-sm-4 col-lg-3 offset-lg-9">
+      <section class="section-shell pt-0">
+        <div class="container">
+          <div class="row catalog-layout g-4">
+            <aside class="col-lg-3 catalog-sidebar">
+              <div class="catalog-panel mb-4">
+                <div class="section-kicker mb-2">סינון</div>
+                <h3 class="fw-semibold mb-3 h5">מצאו מהר את מה שצריך</h3>
+                <div class="mb-4">
+                  <h6 class="fw-semibold mb-3 text-xs text-uppercase">קטגוריה</h6>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat1" value="חומרי בנייה" /><label class="form-check-label" for="cat1">חומרי בנייה</label></div>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat2" value="צבע" /><label class="form-check-label" for="cat2">צבע</label></div>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat3" value="אינסטלציה" /><label class="form-check-label" for="cat3">אינסטלציה</label></div>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat4" value="חשמל" /><label class="form-check-label" for="cat4">חשמל</label></div>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat5" value="כלי עבודה" /><label class="form-check-label" for="cat5">כלי עבודה</label></div>
+                  <div class="form-check"><input class="form-check-input filter-category" type="checkbox" id="cat6" value="גינון" /><label class="form-check-label" for="cat6">גינון</label></div>
+                </div>
+                <div class="mb-4">
+                  <h6 class="fw-semibold mb-3 text-xs text-uppercase">מחיר</h6>
+                  <div class="form-check"><input class="form-check-input filter-price" type="checkbox" id="price1" value="low" /><label class="form-check-label" for="price1">עד 100₪</label></div>
+                  <div class="form-check"><input class="form-check-input filter-price" type="checkbox" id="price2" value="mid" /><label class="form-check-label" for="price2">100₪ - 300₪</label></div>
+                  <div class="form-check"><input class="form-check-input filter-price" type="checkbox" id="price3" value="high" /><label class="form-check-label" for="price3">מעל 300₪</label></div>
+                </div>
+                <div class="mb-4">
+                  <h6 class="fw-semibold mb-3 text-xs text-uppercase">צבע</h6>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col1" value="לבן" /><label class="form-check-label" for="col1">לבן</label></div>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col2" value="אפור" /><label class="form-check-label" for="col2">אפור</label></div>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col3" value="שחור" /><label class="form-check-label" for="col3">שחור</label></div>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col4" value="אדום" /><label class="form-check-label" for="col4">אדום</label></div>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col5" value="כחול" /><label class="form-check-label" for="col5">כחול</label></div>
+                  <div class="form-check"><input class="form-check-input filter-color" type="checkbox" id="col6" value="ירוק" /><label class="form-check-label" for="col6">ירוק</label></div>
+                </div>
+                <div class="d-grid">
+                  <button id="applyFiltersBtn" class="btn btn-primary" type="button">החל סינון</button>
+                </div>
+              </div>
+
+              <div id="cart-section" class="catalog-panel mb-4">
+                <h6 class="fw-semibold mb-3 text-xs text-uppercase">סל קניות</h6>
+                <p id="cartUserMessage" class="small text-muted mb-3">יש להתחבר כדי להוסיף מוצרים לסל.</p>
+                <ul id="cartItemsList" class="list-unstyled small mb-3"></ul>
+                <div class="d-flex justify-content-between fw-semibold mb-3">
+                  <span>סה"כ</span>
+                  <span id="cartTotal">₪ 0.00</span>
+                </div>
+                <button
+                  id="checkoutBtn"
+                  class="btn btn-dark btn-sm w-100"
+                  type="button"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="לחיצה תיצור הזמנה ותנקה את הסל"
+                >
+                  ביצוע הזמנה
+                </button>
+              </div>
+
+              <div class="catalog-panel">
+                <h6 class="fw-semibold mb-3 text-xs text-uppercase">היסטוריית הזמנות</h6>
+                <ul id="orderHistoryList" class="list-unstyled small mb-0"></ul>
+              </div>
+            </aside>
+
+            <div class="col-lg-9">
+              <div class="catalog-toolbar surface-card p-3 p-lg-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap w-100">
+                  <div>
+                    <div class="section-kicker mb-2">קטלוג החנות</div>
+                    <h2 class="h4 mb-0">מוצרים מוכנים להזמנה, מסודרים לפי קטגוריות</h2>
+                  </div>
+                  <div class="col-sm-5 col-lg-4">
                     <select class="form-select" id="sortSelect">
-                      <option value="" selected="">מיון: מומלצים</option>
+                      <option value="" selected>מיון: מומלצים</option>
                       <option value="נמכרים ביותר">נמכרים ביותר</option>
                       <option value="לפי א״ב - עולה">לפי א״ב - עולה</option>
                       <option value="לפי א״ב - יורד">לפי א״ב - יורד</option>
@@ -183,590 +143,101 @@
                       <option value="תאריך - חדש לישן">תאריך - חדש לישן</option>
                     </select>
                   </div>
-
                 </div>
               </div>
-              <!-- Repeat Product Card -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/אקווניר.jpg" class="card-img-top" alt="אקווניר"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">מותג</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">צבע לקיר לבן 18 ליטר</h3>
 
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪  350.00</span>
-                        <span class="">₪  300.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="modern-sofa"
-                      data-product-name="ספה מודרנית" data-product-price="29" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/בלוק.png" class="card-img-top" alt="בלוק בנייה"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">בלוק בנייה</h3>
+              <div id="productsGrid" class="row g-4"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 12.00</span>
-                        <span class="">₪ 10.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="floor-lamp"
-                      data-product-name="בלוק בנייה" data-product-price="10" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/בסיס.png" class="card-img-top" alt="צבע בסיס"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נירלט</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">צבע בסיס</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 78.00</span>
-                        <span class="">₪ 68.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="צבע בסיס"
-                      data-product-price="68" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/ברז.png" class="card-img-top" alt="ברז"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">גרואה</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">ברז</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 150.00</span>
-                        <span class="">₪ 120.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="ברז" data-product-price="120"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/דבק סיליקון.png" class="card-img-top"
-                      alt="דבק סיליקון"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נירלט</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">דבק סיליקון</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 20.00</span>
-                        <span class="">₪ 18.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="דבק סיליקון" data-product-price="18" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/חוטי חשמל.png" class="card-img-top" alt="חוטי חשמל"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">חוטי חשמל</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 10.00</span>
-                        <span class=""> (למטר) ₪ 5.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="חוטי חשמל"
-                      data-product-price="5" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/כבל מאריך.png" class="card-img-top" alt="כבל מאריך"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">כבל מאריך</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 100.00</span>
-                        <span class="">₪ 90.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="כבל מאריך" data-product-price="90"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/מברשות צבע.png" class="card-img-top"
-                      alt="מברשות צבע"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סט מברשות צבע</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 50.00</span>
-                        <span class="">₪ 45.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="סט מברשות צבע" data-product-price="45" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/מלט.png" class="card-img-top" alt="מלט"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נשר</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">מלט</h3>
-
-                      <div class="">
-                        <span class="">₪ 80.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="מלט"
-                      data-product-price="80" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/מקדחה חשמלית.png" class="card-img-top" alt="מקדחה חשמלית"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">מקיטה</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">מקדחה חשמלית</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 500.00</span>
-                        <span class="">₪ 450.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="מקדחה חשמלית" data-product-price="450"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/נירופלסט.jpg" class="card-img-top"
-                      alt="נירופלסט"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נירלט</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">נירופלסט</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 38.00</span>
-                        <span class="">₪ 28.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="נירופלסט" data-product-price="28" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סובר 7.png" class="card-img-top" alt="סופר 7 - דבק"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">סופר-7</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סופר 7 - דבק</h3>
-
-                      <div class="">
-                        <span class="">₪ 20.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="סופר 7 - דבק"
-                      data-product-price="20" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סופר חמש.png" class="card-img-top" alt="דבק סיליקון"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">סופר-5</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">דבק סיליקון</h3>
-
-                      <div class="">
-                        <span class="">₪ 15.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="דבק סיליקון" data-product-price="15"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סט אינסטלציה.png" class="card-img-top"
-                      alt="סט אינסטלציה"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">גרואה</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סט אינסטלציה</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 180.00</span>
-                        <span class="">₪ 120.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="סט אינסטלציה" data-product-price="120" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סט ברגים.png" class="card-img-top" alt="סט ברגים"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סט ברגים</h3>
-
-                      <div class="">
-                        <span class="">₪ 10.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="סט ברגים"
-                      data-product-price="10" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סט מברגים.png" class="card-img-top" alt="סט מברגים"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סט מברגים</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 100.00</span>
-                        <span class="">₪ 90.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="סט מברגים" data-product-price="90"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סט שפכטלים.png" class="card-img-top"
-                      alt="סט שפכטלים"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סט שפכטלים</h3>
-
-                      <div class="">
-                        <span class="">₪ 50.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="סט שפכטלים" data-product-price="50" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סיד.png" class="card-img-top" alt="סיד"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נירלט</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סיד</h3>
-
-                      <div class="">
-                        <span class="">₪ 100.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="סיד" data-product-price="100"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/סיפון.png" class="card-img-top" alt="סיפון"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">ספדיני</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">סיפון</h3>
-
-                      <div class="">
-                        <span class="">₪ 30.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="סיפון" data-product-price="30"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/פלטת גבס.png" class="card-img-top"
-                      alt="פלטת גבס"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">פלטת גבס</h3>
-
-                      <div class="">
-                        <span class="">₪ 120.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="פלטת גבס" data-product-price="120" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/רולר צביעה.png" class="card-img-top" alt=" רולר צביעה"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">רולר צביעה</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 50.00</span>
-                        <span class="">₪ 40.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="high-back-boss-chair" data-product-name="רולר צביעה"
-                      data-product-price="40" data-bs-toggle="tooltip" data-bs-placement="top"
-                      title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/שק חול.png" class="card-img-top" alt="שק חול"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">שק חול</h3>
-
-                      <div class="">
-                        <span class="fw-semibold text-decoration-line-through">₪ 500.00</span>
-                        <span class="">₪ 450.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="fancy-metal-clock" data-product-name="שק חול" data-product-price="450"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/שק חצץ.png" class="card-img-top"
-                      alt="שק חצץ"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">כללי</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">שק חצץ</h3>
-
-                      <div class="">
-                        <span class="">₪ 500.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="comfort-chair"
-                      data-product-name="שק חצץ" data-product-price="500" data-bs-toggle="tooltip"
-                      data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
-              </div>
-              <!-- /Repeat -->
-              <div class="col-sm-6 col-md-4">
-                <div class="card product-card">
-                  <a href="#"><img src="../assets/images/products/ציוד גינה.png" class="card-img-top" alt="ציוד גינה"></a>
-                  <div class="card-body">
-                    <p class="text-muted mb-2 text-uppercase text-xs mb-3">נירלט</p>
-                    <div class="mb-3">
-                      <h3 class="h5 mb-1">ציוד גינה</h3>
-
-                      <div class="">
-                        <span class="fw-semibold">₪ 240.00</span>
-                        <span class="">₪ 220.00</span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn"
-                      data-product-id="metal-frame-stool" data-product-name="ציוד גינה" data-product-price="220"
-                      data-bs-toggle="tooltip" data-bs-placement="top" title="הוספת המוצר לסל הקניות">הוסף לסל</button>
-                  </div>
-                </div>
+    <footer class="bg-dark pt-8 footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-4 col-md-4 col-12">
+            <a class="navbar-brand" href="../index.html">
+              <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+                <span style="letter-spacing: .12rem;">
+                  <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
+                </span>
+              </span>
+            </a>
+          </div>
+          <div class="col-lg-8 col-md-6 mb-4 d-flex justify-content-start justify-content-md-end gy-4">
+            <ul class="list-unstyled lh-lg d-flex flex-column flex-md-row gap-4">
+              <li><a href="../index.html" class="ft-links text-decoration-none">דף הבית</a></li>
+              <li><a href="./products.html" class="ft-links text-decoration-none">מוצרים</a></li>
+              <li><a href="./contact.html" class="ft-links text-decoration-none">צור קשר</a></li>
+              <li><a href="./account.html" class="ft-links text-decoration-none">אזור אישי</a></li>
+            </ul>
+          </div>
+          <div class="row justify-content-center align-items-center pt-lg-8 pb-4">
+            <div class="col-lg-6 col-md-6 mb-4">
+              <h2 class="display-3 text-white">פתרונות מקצועיים לכל בית ועסק</h2>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-4">
+              <div class="d-flex gap-3 justify-content-start justify-content-lg-end">
+                <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-twitter"></i></a>
+                <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-linkedin"></i></a>
               </div>
             </div>
-
-
-
-
-            <!-- Add more cards as needed -->
           </div>
+          <div class="row justify-content-center align-items-center py-lg-8">
+            <div class="col-lg-6 col-md-6 mb-4">
+              <div class="d-flex flex-column">
+                <span>דוא"ל</span>
+                <span class="h3 fw-light">info@nevelat.co.il</span>
+              </div>
+            </div>
+            <div class="col-lg-6 col-md-6 mb-4">
+              <div class="d-flex gap-3 justify-content-lg-end">
+                <a href="./contact.html" class="btn btn-outline-light">יצירת קשר</a>
+              </div>
+            </div>
+          </div>
+          <hr class="bg-secondary" />
+          <div class="row pb-3">
+            <div class="col-md-6 text-center text-md-start">
+              <p class="mb-0">&copy; 2025 נבלט בע״מ. כל הזכויות שמורות.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+              <a href="#" class="ft-links text-decoration-none me-3">מדיניות פרטיות</a>
+              <a href="#" class="ft-links text-decoration-none">תנאי שימוש</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
 
-        </div>
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+      <div class="offcanvas-header px-4">
+        <a class="navbar-brand" href="../index.html">
+          <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+            <span style="letter-spacing: .12rem;">
+              <img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;" />
+            </span>
+          </span>
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
-      </div>
-    </section>
-  </main>
-  <footer class="bg-dark  pt-8 footer">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-4 col-md-4 col-12">
-          <a class="navbar-brand" href="#">
-            <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-              <span class="" style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט"
-                  class="img-fluid" style="max-height: 50px;"></span>
-            </span></a>
-        </div>
-        <div class="col-lg-8 col-md-6 mb-4 d-flex justify-content-start justify-content-md-end gy-4">
-          <ul class="list-unstyled lh-lg d-flex flex-column flex-md-row gap-4">
-            <li><a href="../index.html" class=" ft-links text-decoration-none">דף הבית</a></li>
-            <li><a href="#" class=" ft-links text-decoration-none">שירותים</a></li>
-            <li><a href="#" class=" ft-links text-decoration-none">מוצרים</a></li>
-            <li><a href="#" class=" ft-links text-decoration-none">אודות</a></li>
-            <li><a href="#" class=" ft-links text-decoration-none">צור קשר</a></li>
+      <div class="offcanvas-body">
+        <div class="navbar-custom">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="../index.html">דף הבית</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="products.html">מוצרים</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">צור קשר</a></li>
+            <li class="nav-item"><a class="nav-link" href="account.html" data-auth-control="dashboard" hidden>אזור אישי</a></li>
+            <li class="nav-item"><a class="nav-link" href="login.html" data-auth-control="primary">התחברות</a></li>
           </ul>
         </div>
-        <div class="row justify-content-center align-items-center pt-lg-8 pb-4">
-          <div class="col-lg-6 col-md-6 mb-4">
-            <h2 class="display-3 text-white">פתרונות מקצועיים לכל בית ועסק</h2>
-
-          </div>
-
-
-          <div class="col-lg-6 col-md-6 mb-4">
-            <div class="d-flex gap-3 justify-content-start justify-content-lg-end">
-              <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-facebook"></i></a>
-              <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-twitter"></i></a>
-              <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-instagram"></i></a>
-              <a href="#" class="btn btn-outline-light btn-icon"><i class="bi bi-linkedin"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="row justify-content-center align-items-center py-lg-8">
-          <div class="col-lg-6 col-md-6 mb-4">
-            <div class="d-flex flex-column">
-              <span>דוא"ל</span>
-              <span class="h3 fw-light">info@nevelat.co.il</span>
-            </div>
-          </div>
-
-
-          <div class="col-lg-6 col-md-6 mb-4">
-            <div class="d-flex gap-3 justify-content-lg-end">
-              <a href="#" class="btn btn-outline-light">יצירת קשר</a>
-            </div>
-          </div>
-        </div>
-        <hr class="bg-secondary">
-        <div class="row pb-3">
-          <div class="col-md-6 text-center text-md-start">
-            <p class=" mb-0">&copy; 2025 נבלט בע״מ. כל הזכויות שמורות.</p>
-          </div>
-          <div class="col-md-6 text-center text-md-end">
-            <a href="#" class=" ft-links text-decoration-none me-3">מדיניות פרטיות</a>
-            <a href="#" class=" ft-links text-decoration-none">תנאי שימוש</a>
-          </div>
-        </div>
-      </div>
-  </footer>
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
-    <div class="offcanvas-header px-4">
-      <a class="navbar-brand" href="#">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span class="" style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט"
-              class="img-fluid" style="max-height: 50px;"></span>
-        </span></a>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-
-      <div class="navbar-custom">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="../index.html">דף הבית</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="about.html">אודות</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="products.html">מוצרים</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="testimonials.html">המלצות</a>
-          </li>
-
-
-          <li class="nav-item">
-            <a class="nav-link " href="contact.html">צור קשר</a>
-          </li>
-        </ul>
       </div>
     </div>
-  </div>
 
-  <script type="module" src="../assets/js/main.js"></script>
-  <script type="module" src="../assets/js/products.js"></script>
-</body>
-
+    <script type="module" src="../assets/js/main.js"></script>
+    <script type="module" src="../assets/js/products.js"></script>
+  </body>
 </html>

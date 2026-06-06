@@ -1,15 +1,18 @@
 const API_BASE_URL = 'http://localhost:4000';
 
-const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
 const cartItemsList = document.getElementById('cartItemsList');
 const cartTotal = document.getElementById('cartTotal');
 const checkoutBtn = document.getElementById('checkoutBtn');
 const cartUserMessage = document.getElementById('cartUserMessage');
 const orderHistoryList = document.getElementById('orderHistoryList');
+const PRODUCTS_GRID_ID = 'productsGrid';
 
 const authUserRaw = localStorage.getItem('authUser');
 const authUser = authUserRaw ? JSON.parse(authUserRaw) : null;
 const publicInventory = new Map();
+const PRODUCT_ASSET_BASE = window.location.pathname.includes('/pages/')
+  ? '../assets/images/products/'
+  : './assets/images/products/';
 
 function formatMoney(amount) {
   return `₪ ${Number(amount || 0).toFixed(2)}`;
@@ -25,31 +28,35 @@ function escapeHtml(value) {
 }
 
 const PRODUCT_CATALOG = [
-  { displayName: 'צבע לקיר לבן 18 ליטר', category: 'צבע', color: 'לבן', brand: 'אקווניר', price: 300, oldPrice: 350, productId: 'paint-wall-white-18l', featuredRank: 1 },
-  { displayName: 'בלוק בנייה', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 10, oldPrice: 12, productId: 'concrete-block', featuredRank: 2 },
-  { displayName: 'צבע בסיס', category: 'צבע', color: 'לבן', brand: 'נירלט', price: 68, oldPrice: 78, productId: 'base-paint', featuredRank: 3 },
-  { displayName: 'ברז', category: 'אינסטלציה', color: 'אפור', brand: 'גרואה', price: 120, oldPrice: 150, productId: 'faucet', featuredRank: 4 },
-  { displayName: 'דבק סיליקון', category: 'חומרי בנייה', color: 'לבן', brand: 'נירלט', price: 18, oldPrice: 20, productId: 'silicone-adhesive', featuredRank: 5 },
-  { displayName: 'חוטי חשמל', category: 'חשמל', color: 'שחור', brand: 'חשמל', price: 5, oldPrice: 10, productId: 'electrical-wire', featuredRank: 6, priceSuffix: '(למטר) ' },
-  { displayName: 'כבל מאריך', category: 'חשמל', color: 'לבן', brand: 'חשמל', price: 90, oldPrice: 100, productId: 'extension-cable', featuredRank: 7 },
-  { displayName: 'סט מברשות צבע', category: 'צבע', color: 'לבן', brand: 'צבעים', price: 45, oldPrice: 50, productId: 'paint-brush-set', featuredRank: 8 },
-  { displayName: 'מלט', category: 'חומרי בנייה', color: 'אפור', brand: 'נשר', price: 80, oldPrice: null, productId: 'cement-bag', featuredRank: 9 },
-  { displayName: 'מקדחה חשמלית', category: 'כלי עבודה', color: 'שחור', brand: 'מקיטה', price: 450, oldPrice: 500, productId: 'electric-drill', featuredRank: 10 },
-  { displayName: 'נירופלסט', category: 'חומרי בנייה', color: 'לבן', brand: 'נירלט', price: 28, oldPrice: 38, productId: 'niroplast', featuredRank: 11 },
-  { displayName: 'סופר 7 - דבק', category: 'חומרי בנייה', color: 'שחור', brand: 'סופר-7', price: 20, oldPrice: null, productId: 'super7-adhesive', featuredRank: 12 },
-  { displayName: 'סופר 5 - דבק סיליקון', category: 'חומרי בנייה', color: 'לבן', brand: 'סופר-5', price: 15, oldPrice: null, productId: 'super5-silicone', featuredRank: 13 },
-  { displayName: 'סט אינסטלציה', category: 'אינסטלציה', color: 'אפור', brand: 'גרואה', price: 120, oldPrice: 180, productId: 'plumbing-set', featuredRank: 14 },
-  { displayName: 'סט ברגים', category: 'כלי עבודה', color: 'שחור', brand: 'ברגים', price: 10, oldPrice: null, productId: 'screw-set', featuredRank: 15 },
-  { displayName: 'סט מברגים', category: 'כלי עבודה', color: 'שחור', brand: 'ברגים', price: 90, oldPrice: 100, productId: 'screwdriver-set', featuredRank: 16 },
-  { displayName: 'סט שפכטלים', category: 'כלי עבודה', color: 'אפור', brand: 'שפכטל', price: 50, oldPrice: null, productId: 'putty-set', featuredRank: 17 },
-  { displayName: 'סיד', category: 'צבע', color: 'לבן', brand: 'נירלט', price: 100, oldPrice: null, productId: 'lime-whitewash', featuredRank: 18 },
-  { displayName: 'סיפון', category: 'אינסטלציה', color: 'אפור', brand: 'ספדיני', price: 30, oldPrice: null, productId: 'sink-trap', featuredRank: 19 },
-  { displayName: 'פלטת גבס', category: 'חומרי בנייה', color: 'לבן', brand: 'גבס', price: 120, oldPrice: null, productId: 'gypsum-board', featuredRank: 20 },
-  { displayName: 'רולר צביעה', category: 'צבע', color: 'כחול', brand: 'צבעים', price: 40, oldPrice: 50, productId: 'paint-roller', featuredRank: 21 },
-  { displayName: 'שק חול', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 450, oldPrice: 500, productId: 'sand-bag', featuredRank: 22 },
-  { displayName: 'שק חצץ', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 500, oldPrice: null, productId: 'gravel-bag', featuredRank: 23 },
-  { displayName: 'ציוד גינה', category: 'גינון', color: 'ירוק', brand: 'גינון', price: 220, oldPrice: 240, productId: 'garden-supplies', featuredRank: 24 },
+  { displayName: 'צבע לקיר לבן 18 ליטר', category: 'צבע', color: 'לבן', brand: 'אקווניר', price: 300, oldPrice: 350, productId: 'paint-wall-white-18l', featuredRank: 1, image: 'אקווניר.jpg' },
+  { displayName: 'בלוק בנייה', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 10, oldPrice: 12, productId: 'concrete-block', featuredRank: 2, image: 'בלוק.png' },
+  { displayName: 'צבע בסיס', category: 'צבע', color: 'לבן', brand: 'נירלט', price: 68, oldPrice: 78, productId: 'base-paint', featuredRank: 3, image: 'בסיס.png' },
+  { displayName: 'ברז', category: 'אינסטלציה', color: 'אפור', brand: 'גרואה', price: 120, oldPrice: 150, productId: 'faucet', featuredRank: 4, image: 'ברז.png' },
+  { displayName: 'דבק סיליקון', category: 'חומרי בנייה', color: 'לבן', brand: 'נירלט', price: 18, oldPrice: 20, productId: 'silicone-adhesive', featuredRank: 5, image: 'דבק סיליקון.png' },
+  { displayName: 'חוטי חשמל', category: 'חשמל', color: 'שחור', brand: 'חשמל', price: 5, oldPrice: 10, productId: 'electrical-wire', featuredRank: 6, priceSuffix: '(למטר) ', image: 'חוטי חשמל.png' },
+  { displayName: 'כבל מאריך', category: 'חשמל', color: 'לבן', brand: 'חשמל', price: 90, oldPrice: 100, productId: 'extension-cable', featuredRank: 7, image: 'כבל מאריך.png' },
+  { displayName: 'סט מברשות צבע', category: 'צבע', color: 'לבן', brand: 'צבעים', price: 45, oldPrice: 50, productId: 'paint-brush-set', featuredRank: 8, image: 'מברשות צבע.png' },
+  { displayName: 'מלט', category: 'חומרי בנייה', color: 'אפור', brand: 'נשר', price: 80, oldPrice: null, productId: 'cement-bag', featuredRank: 9, image: 'מלט.png' },
+  { displayName: 'מקדחה חשמלית', category: 'כלי עבודה', color: 'שחור', brand: 'מקיטה', price: 450, oldPrice: 500, productId: 'electric-drill', featuredRank: 10, image: 'מקדחה חשמלית.png' },
+  { displayName: 'נירופלסט', category: 'חומרי בנייה', color: 'לבן', brand: 'נירלט', price: 28, oldPrice: 38, productId: 'niroplast', featuredRank: 11, image: 'נירופלסט.jpg' },
+  { displayName: 'סופר 7 - דבק', category: 'חומרי בנייה', color: 'שחור', brand: 'סופר-7', price: 20, oldPrice: null, productId: 'super7-adhesive', featuredRank: 12, image: 'סובר 7.png' },
+  { displayName: 'סופר 5 - דבק סיליקון', category: 'חומרי בנייה', color: 'לבן', brand: 'סופר-5', price: 15, oldPrice: null, productId: 'super5-silicone', featuredRank: 13, image: 'סופר חמש.png' },
+  { displayName: 'סט אינסטלציה', category: 'אינסטלציה', color: 'אפור', brand: 'גרואה', price: 120, oldPrice: 180, productId: 'plumbing-set', featuredRank: 14, image: 'סט אינסטלציה.png' },
+  { displayName: 'סט ברגים', category: 'כלי עבודה', color: 'שחור', brand: 'ברגים', price: 10, oldPrice: null, productId: 'screw-set', featuredRank: 15, image: 'סט ברגים.png' },
+  { displayName: 'סט מברגים', category: 'כלי עבודה', color: 'שחור', brand: 'ברגים', price: 90, oldPrice: 100, productId: 'screwdriver-set', featuredRank: 16, image: 'סט מברגים.png' },
+  { displayName: 'סט שפכטלים', category: 'כלי עבודה', color: 'אפור', brand: 'שפכטל', price: 50, oldPrice: null, productId: 'putty-set', featuredRank: 17, image: 'סט שפכטלים.png' },
+  { displayName: 'סיד', category: 'צבע', color: 'לבן', brand: 'נירלט', price: 100, oldPrice: null, productId: 'lime-whitewash', featuredRank: 18, image: 'סיד.png' },
+  { displayName: 'סיפון', category: 'אינסטלציה', color: 'אפור', brand: 'ספדיני', price: 30, oldPrice: null, productId: 'sink-trap', featuredRank: 19, image: 'סיפון.png' },
+  { displayName: 'פלטת גבס', category: 'חומרי בנייה', color: 'לבן', brand: 'גבס', price: 120, oldPrice: null, productId: 'gypsum-board', featuredRank: 20, image: 'פלטת גבס.png' },
+  { displayName: 'רולר צביעה', category: 'צבע', color: 'כחול', brand: 'צבעים', price: 40, oldPrice: 50, productId: 'paint-roller', featuredRank: 21, image: 'רולר צביעה.png' },
+  { displayName: 'שק חול', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 450, oldPrice: 500, productId: 'sand-bag', featuredRank: 22, image: 'שק חול.png' },
+  { displayName: 'שק חצץ', category: 'חומרי בנייה', color: 'אפור', brand: 'חומרי בנייה', price: 500, oldPrice: null, productId: 'gravel-bag', featuredRank: 23, image: 'שק חצץ.png' },
+  { displayName: 'ציוד גינה', category: 'גינון', color: 'ירוק', brand: 'גינון', price: 220, oldPrice: 240, productId: 'garden-supplies', featuredRank: 24, image: 'ציוד גינה.png' },
 ];
+
+function getProductImageSrc(imageName) {
+  return `${PRODUCT_ASSET_BASE}${imageName}`;
+}
 
 function getPriceBand(price) {
   if (price < 100) return 'low';
@@ -57,58 +64,58 @@ function getPriceBand(price) {
   return 'high';
 }
 
-function hydrateProductCards() {
-  const cards = Array.from(document.querySelectorAll('#productsGrid .product-card'));
+function createProductCard(item, index) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'col-sm-6 col-md-4';
+  wrapper.dataset.category = item.category || '';
+  wrapper.dataset.color = item.color || '';
+  wrapper.dataset.priceBand = getPriceBand(Number(item.price || 0));
+  wrapper.dataset.price = String(item.price || 0);
+  wrapper.dataset.rank = String(item.featuredRank || (100 + index));
+  wrapper.dataset.name = item.displayName || '';
 
-  cards.forEach((card, index) => {
-    const meta = PRODUCT_CATALOG[index];
-    if (!meta) return;
+  const imageSrc = getProductImageSrc(item.image);
+  const priceHtml = item.oldPrice
+    ? `<span class="fw-semibold text-decoration-line-through text-muted">${formatMoney(item.oldPrice)}</span><span class="fw-semibold">${item.priceSuffix || ''}${formatMoney(item.price)}</span>`
+    : `<span class="fw-semibold">${item.priceSuffix || ''}${formatMoney(item.price)}</span>`;
 
-    const wrapper = card.closest('.col-sm-6, .col-md-4');
-    if (wrapper) {
-      wrapper.dataset.category = meta.category;
-      wrapper.dataset.color = meta.color;
-      wrapper.dataset.priceBand = getPriceBand(meta.price);
-      wrapper.dataset.price = String(meta.price);
-      wrapper.dataset.rank = String(meta.featuredRank);
-      wrapper.dataset.name = meta.displayName;
-    }
+  wrapper.innerHTML = `
+    <div class="card product-card h-100">
+      <div class="product-card__media">
+        <img src="${escapeHtml(imageSrc)}" class="card-img-top" alt="${escapeHtml(item.displayName)}">
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+          <div>
+            <p class="text-muted mb-1 text-uppercase text-xs">${escapeHtml(item.brand || item.category || 'מוצר')}</p>
+            <h3 class="h5 mb-0">${escapeHtml(item.displayName)}</h3>
+          </div>
+          <span class="badge rounded-pill text-bg-light border">${escapeHtml(item.category || '')}</span>
+        </div>
+        <div class="mb-3 product-card__price">${priceHtml}</div>
+        <div class="mt-auto">
+          <button type="button" class="btn btn-primary btn-sm w-100 add-to-cart-btn"
+            data-product-id="${escapeHtml(item.productId)}"
+            data-product-name="${escapeHtml(item.displayName)}"
+            data-product-price="${Number(item.price || 0)}"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            title="הוספת המוצר לסל הקניות">הוסף לסל</button>
+        </div>
+      </div>
+    </div>
+  `;
 
-    const title = card.querySelector('h3');
-    if (title) {
-      title.textContent = meta.displayName;
-    }
+  return wrapper;
+}
 
-    const brandLabel = card.querySelector('.card-body > p.text-muted');
-    if (brandLabel) {
-      brandLabel.textContent = meta.category;
-    }
+function renderCatalogProducts() {
+  const grid = document.getElementById(PRODUCTS_GRID_ID);
+  if (!grid) return;
 
-    const priceRow = card.querySelector('.mb-3 > div');
-    if (priceRow) {
-      if (meta.oldPrice) {
-        priceRow.innerHTML = `<span class="fw-semibold text-decoration-line-through">${formatMoney(meta.oldPrice)}</span><span class="">${meta.priceSuffix || ''}${formatMoney(meta.price)}</span>`;
-      } else {
-        priceRow.innerHTML = `<span class="">${meta.priceSuffix || ''}${formatMoney(meta.price)}</span>`;
-      }
-    }
-
-    const button = card.querySelector('.add-to-cart-btn');
-    if (button) {
-      button.dataset.productId = meta.productId;
-      button.dataset.productName = meta.displayName;
-      button.dataset.productPrice = String(meta.price);
-    }
-  });
-
-  cards.forEach((card) => {
-    const title = card.querySelector('h3');
-    if (!title) return;
-    // Remove leftover anchors from any card that still contains them.
-    const anchor = title.querySelector('a');
-    if (anchor) {
-      title.textContent = anchor.textContent.trim();
-    }
+  grid.innerHTML = '';
+  PRODUCT_CATALOG.forEach((item, index) => {
+    grid.appendChild(createProductCard(item, index));
   });
 }
 
@@ -196,7 +203,7 @@ function createCustomProductCard(item, index) {
 }
 
 async function loadCustomProducts() {
-  const grid = document.getElementById('productsGrid');
+  const grid = document.getElementById(PRODUCTS_GRID_ID);
   if (!grid) return;
 
   try {
@@ -215,15 +222,8 @@ async function loadCustomProducts() {
       .forEach((item, index) => {
         const card = createCustomProductCard(item, index);
         grid.appendChild(card);
-        const button = card.querySelector('.add-to-cart-btn');
-        if (button) {
-          button.dataset.bound = 'true';
-          button.addEventListener('click', () => addToCart(button));
-        }
         existingIds.add(item.productId);
       });
-
-    hydrateProductCards();
     applyInventoryBadges();
     applyProductFilters();
   } catch (_err) {
@@ -273,7 +273,7 @@ function sortWrappers(wrappers, sortValue) {
 }
 
 function applyProductFilters() {
-  const grid = document.getElementById('productsGrid');
+  const grid = document.getElementById(PRODUCTS_GRID_ID);
   if (!grid) return;
 
   const wrappers = Array.from(grid.querySelectorAll(':scope > .col-sm-6.col-md-4'));
@@ -290,7 +290,6 @@ function applyProductFilters() {
   });
 
   const sorted = sortWrappers(filtered, sortValue);
-  const controlBlock = grid.querySelector(':scope > .col-12');
   sorted.forEach((wrapper) => {
     wrapper.classList.remove('d-none');
     grid.appendChild(wrapper);
@@ -302,10 +301,6 @@ function applyProductFilters() {
       wrapper.classList.add('d-none');
       grid.appendChild(wrapper);
     });
-
-  if (controlBlock) {
-    grid.insertBefore(controlBlock, grid.firstChild);
-  }
 }
 
 function bindFilterControls() {
@@ -577,13 +572,12 @@ async function initializePage() {
     updateLoggedInState();
   }
 
-  hydrateProductCards();
+  renderCatalogProducts();
   bindFilterControls();
-
-  addToCartButtons.forEach((button) => {
-    if (button.dataset.bound) return;
-    button.dataset.bound = 'true';
-    button.addEventListener('click', () => addToCart(button));
+  document.getElementById(PRODUCTS_GRID_ID)?.addEventListener('click', (event) => {
+    const button = event.target.closest('.add-to-cart-btn');
+    if (!button) return;
+    addToCart(button);
   });
 
   if (checkoutBtn) {
