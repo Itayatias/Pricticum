@@ -1,3 +1,5 @@
+import { Modal } from 'bootstrap';
+
 const API_BASE_URL = 'http://localhost:4000';
 
 const authUserRaw = localStorage.getItem('authUser');
@@ -7,10 +9,23 @@ const staffUserLine = document.getElementById('staffUserLine');
 const staffStatus = document.getElementById('staffStatus');
 const inventoryTableBody = document.getElementById('inventoryTableBody');
 const inventoryMovementsList = document.getElementById('inventoryMovementsList');
+const inventoryMovementsBody = document.getElementById('inventoryMovementsBody');
 const staffSkuCount = document.getElementById('staffSkuCount');
 const staffLowStockCount = document.getElementById('staffLowStockCount');
 const staffOutOfStockCount = document.getElementById('staffOutOfStockCount');
 const managerPanel = document.getElementById('managerPanel');
+const inventoryToolbar = document.getElementById('inventoryToolbar');
+const inventoryAddProductBtn = document.getElementById('inventoryAddProductBtn');
+const inventoryMovementsBtn = document.getElementById('inventoryMovementsBtn');
+const inventorySearchInput = document.getElementById('inventorySearchInput');
+const inventoryCategoryFilter = document.getElementById('inventoryCategoryFilter');
+const inventoryClearFiltersBtn = document.getElementById('inventoryClearFiltersBtn');
+const inventoryPagination = document.getElementById('inventoryPagination');
+const inventoryPaginationMeta = document.getElementById('inventoryPaginationMeta');
+const inventoryPageInfo = document.getElementById('inventoryPageInfo');
+const inventoryProductModalEl = document.getElementById('inventoryProductModal');
+const inventoryMovementsModalEl = document.getElementById('inventoryMovementsModal');
+const inventoryProductModalTitle = document.getElementById('inventoryProductModalTitle');
 const inventoryForm = document.getElementById('inventoryForm');
 const inventoryProductId = document.getElementById('inventoryProductId');
 const inventoryProductName = document.getElementById('inventoryProductName');
@@ -37,12 +52,59 @@ const workHoursCheckOutBtn = document.getElementById('workHoursCheckOutBtn');
 const workHoursSaveNoteBtn = document.getElementById('workHoursSaveNoteBtn');
 const workHoursExportBtn = document.getElementById('workHoursExportBtn');
 const workHoursReportBody = document.getElementById('workHoursReportBody');
+const workHoursReportFilterInput = document.getElementById('workHoursReportFilterInput');
+const workHoursReportClearFiltersBtn = document.getElementById('workHoursReportClearFiltersBtn');
+const workHoursReportPagination = document.getElementById('workHoursReportPagination');
+const workHoursReportPaginationMeta = document.getElementById('workHoursReportPaginationMeta');
+const workHoursReportPageInfo = document.getElementById('workHoursReportPageInfo');
+const purchaseOrdersTableBody = document.getElementById('staffPurchaseOrdersTable');
+const purchaseOrdersSearchInput = document.getElementById('staffPurchaseOrdersSearchInput');
+const purchaseOrdersStatusFilter = document.getElementById('staffPurchaseOrdersStatusFilter');
+const purchaseOrdersClearFiltersBtn = document.getElementById('staffPurchaseOrdersClearFiltersBtn');
+const purchaseOrdersPagination = document.getElementById('staffPurchaseOrdersPagination');
+const purchaseOrdersPaginationMeta = document.getElementById('staffPurchaseOrdersPaginationMeta');
+const purchaseOrdersPageInfo = document.getElementById('staffPurchaseOrdersPageInfo');
+const customerOrdersTableBody = document.getElementById('staffCustomerOrdersTable');
+const customerOrdersSearchInput = document.getElementById('staffCustomerOrdersSearchInput');
+const customerOrdersPagination = document.getElementById('staffCustomerOrdersPagination');
+const customerOrdersPaginationMeta = document.getElementById('staffCustomerOrdersPaginationMeta');
+const customerOrdersPageInfo = document.getElementById('staffCustomerOrdersPageInfo');
+const staffLogoutLink = document.querySelector('[data-staff-logout]');
 
 let currentEditProductId = null;
+let inventoryProductModal = null;
+let inventoryMovementsModal = null;
+let workHoursReportState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+let purchaseOrdersState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+let customerOrdersState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+const inventoryPageState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
 const hasInventoryView = Boolean(inventoryTableBody || inventoryMovementsList);
 const hasInventoryFormView = Boolean(inventoryForm);
 const hasProductCreateView = Boolean(inventoryPrice || inventoryImageUrl || inventoryImageFile || inventoryImagePreview);
 const hasSupplierSelectView = Boolean(inventorySupplierId);
+const hasInventoryManagementView = Boolean(inventoryToolbar);
+const hasPurchaseOrdersView = Boolean(purchaseOrdersTableBody);
+const hasCustomerOrdersView = Boolean(customerOrdersTableBody);
 const hasWorkHoursView = Boolean(
   workHoursStatusBadge ||
     workHoursCheckIn ||
@@ -68,6 +130,15 @@ function clearStatus() {
   if (!staffStatus) return;
   staffStatus.classList.add('d-none');
   staffStatus.textContent = '';
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function formatStockStatus(stock, minStock) {
@@ -116,6 +187,330 @@ function readFileAsDataUrl(file) {
 
 function isSupportedImageSource(value) {
   return /^(data:image\/|https?:\/\/|\.{1,2}\/|\/)/i.test(String(value || '').trim());
+}
+
+function getInventoryProductModal() {
+  if (!inventoryProductModal && inventoryProductModalEl) {
+    inventoryProductModal = new Modal(inventoryProductModalEl);
+  }
+  return inventoryProductModal;
+}
+
+function getInventoryMovementsModal() {
+  if (!inventoryMovementsModal && inventoryMovementsModalEl) {
+    inventoryMovementsModal = new Modal(inventoryMovementsModalEl);
+  }
+  return inventoryMovementsModal;
+}
+
+function getProductImageSource() {
+  const file = getSelectedImageFile();
+  if (file) {
+    return readFileAsDataUrl(file);
+  }
+  return Promise.resolve(getTrimmedImageUrl());
+}
+
+function getInventoryProductLabel(productId) {
+  const item = (window.__inventoryItems || []).find((entry) => String(entry.productId) === String(productId));
+  return item?.productName || String(productId || '');
+}
+
+function getPurchaseOrderStatusLabel(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'new') return 'חדש';
+  if (normalized === 'in_progress') return 'בתהליך';
+  if (normalized === 'picking') return 'ליקוט';
+  if (normalized === 'done') return 'בוצע';
+  if (normalized === 'sent') return 'נשלח';
+  if (normalized === 'draft') return 'טיוטה';
+  return String(status || '--');
+}
+
+function normalizePurchaseOrderStatusClient(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['new', 'in_progress', 'picking', 'done'].includes(normalized)) return normalized;
+  if (normalized === 'draft' || normalized === 'sent') return 'new';
+  return 'new';
+}
+
+function getPurchaseOrderStatusClass(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'done') return 'text-bg-success';
+  if (normalized === 'picking') return 'text-bg-warning';
+  if (normalized === 'in_progress') return 'text-bg-primary';
+  if (normalized === 'new') return 'text-bg-danger';
+  return 'text-bg-secondary';
+}
+
+function isOpenPurchaseOrderStatus(status) {
+  return ['new', 'in_progress', 'picking', 'sent', 'draft'].includes(String(status || '').trim().toLowerCase());
+}
+
+function syncSidebarActiveState() {
+  const links = document.querySelectorAll('aside.manager-sidebar nav.manager-nav .manager-nav__link[href]');
+  const currentPath = window.location.pathname.split('/').pop() || 'staff.html';
+  links.forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const linkPath = href.split('/').pop();
+    link.classList.toggle('active', linkPath === currentPath);
+  });
+}
+
+function getPageItems(items, pageState) {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageState.pageSize));
+  pageState.currentPage = Math.min(pageState.currentPage, totalPages);
+  const startIndex = (pageState.currentPage - 1) * pageState.pageSize;
+  return {
+    totalPages,
+    pageItems: items.slice(startIndex, startIndex + pageState.pageSize),
+  };
+}
+
+function renderPagination(container, pageState, metaEl, pageInfoEl, label) {
+  if (!container) return;
+
+  const total = pageState.filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageState.pageSize));
+  const currentPage = Math.min(pageState.currentPage, totalPages);
+  pageState.currentPage = currentPage;
+
+  if (!total) {
+    container.innerHTML = '';
+    if (metaEl) metaEl.textContent = 'אין נתונים תואמים לסינון';
+    if (pageInfoEl) pageInfoEl.textContent = '0';
+    return;
+  }
+
+  const from = (currentPage - 1) * pageState.pageSize + 1;
+  const to = Math.min(total, currentPage * pageState.pageSize);
+  if (metaEl) metaEl.textContent = `מציגים ${from}-${to} מתוך ${total} ${label}`;
+  if (pageInfoEl) pageInfoEl.textContent = `${currentPage}/${totalPages}`;
+
+  const buttons = [];
+  buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>קודם</button>`);
+
+  const visibleRange = 2;
+  const startPage = Math.max(1, currentPage - visibleRange);
+  const endPage = Math.min(totalPages, currentPage + visibleRange);
+
+  if (startPage > 1) {
+    buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="1">1</button>`);
+    if (startPage > 2) buttons.push('<span class="inventory-pagination__ellipsis">…</span>');
+  }
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    buttons.push(`<button type="button" class="btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}" data-page="${page}">${page}</button>`);
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) buttons.push('<span class="inventory-pagination__ellipsis">…</span>');
+    buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${totalPages}">${totalPages}</button>`);
+  }
+
+  buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>הבא</button>`);
+  container.innerHTML = buttons.join('');
+}
+
+function renderStatusSelect(value, purchaseOrderId) {
+  const normalizedValue = normalizePurchaseOrderStatusClient(value);
+  return `
+    <select class="form-select form-select-sm" data-purchase-order-status="${purchaseOrderId}">
+      <option value="new" ${normalizedValue === 'new' ? 'selected' : ''}>חדש</option>
+      <option value="in_progress" ${normalizedValue === 'in_progress' ? 'selected' : ''}>בתהליך</option>
+      <option value="picking" ${normalizedValue === 'picking' ? 'selected' : ''}>ליקוט</option>
+      <option value="done" ${normalizedValue === 'done' ? 'selected' : ''}>בוצע</option>
+    </select>
+  `;
+}
+
+function updateInventoryPageInfo() {
+  if (!inventoryPageInfo) return;
+  const total = inventoryPageState.filteredItems.length;
+  const from = total ? (inventoryPageState.currentPage - 1) * inventoryPageState.pageSize + 1 : 0;
+  const to = Math.min(total, inventoryPageState.currentPage * inventoryPageState.pageSize);
+  inventoryPageInfo.textContent = total
+    ? `מציגים ${from}-${to} מתוך ${total} מוצרים`
+    : 'אין מוצרים תואמים לסינון';
+  if (inventoryPaginationMeta) {
+    inventoryPaginationMeta.textContent = total
+      ? `מקסימום ${inventoryPageState.pageSize} מוצרים בכל עמוד`
+      : 'נסה לשנות חיפוש או קטגוריה';
+  }
+}
+
+function renderInventoryPagination() {
+  if (!inventoryPagination) return;
+
+  const totalPages = Math.max(1, Math.ceil(inventoryPageState.filteredItems.length / inventoryPageState.pageSize));
+  const currentPage = Math.min(inventoryPageState.currentPage, totalPages);
+  inventoryPageState.currentPage = currentPage;
+
+  if (!inventoryPageState.filteredItems.length) {
+    inventoryPagination.innerHTML = '';
+    updateInventoryPageInfo();
+    return;
+  }
+
+  const pages = [];
+  const visibleRange = 2;
+  const startPage = Math.max(1, currentPage - visibleRange);
+  const endPage = Math.min(totalPages, currentPage + visibleRange);
+
+  pages.push(`
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-page="${Math.max(1, currentPage - 1)}" ${currentPage === 1 ? 'disabled' : ''}>קודם</button>
+  `);
+
+  if (startPage > 1) {
+    pages.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="1">1</button>`);
+    if (startPage > 2) {
+      pages.push('<span class="inventory-pagination__ellipsis">…</span>');
+    }
+  }
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    pages.push(`
+      <button type="button" class="btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}" data-page="${page}">
+        ${page}
+      </button>
+    `);
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      pages.push('<span class="inventory-pagination__ellipsis">…</span>');
+    }
+    pages.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${totalPages}">${totalPages}</button>`);
+  }
+
+  pages.push(`
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-page="${Math.min(totalPages, currentPage + 1)}" ${currentPage === totalPages ? 'disabled' : ''}>הבא</button>
+  `);
+
+  inventoryPagination.innerHTML = pages.join('');
+  updateInventoryPageInfo();
+}
+
+function getFilteredInventoryItems() {
+  const searchTerm = String(inventorySearchInput?.value || '').trim().toLowerCase();
+  const category = String(inventoryCategoryFilter?.value || '').trim();
+
+  return inventoryPageState.allItems.filter((item) => {
+    const matchesSearch =
+      !searchTerm ||
+      String(item.productName || '').toLowerCase().includes(searchTerm) ||
+      String(item.productId || '').toLowerCase().includes(searchTerm);
+    const matchesCategory = !category || String(item.category || '') === category;
+    return matchesSearch && matchesCategory;
+  });
+}
+
+function renderInventoryPageTable() {
+  if (!inventoryTableBody) return;
+
+  inventoryPageState.filteredItems = getFilteredInventoryItems();
+  const totalPages = Math.max(1, Math.ceil(inventoryPageState.filteredItems.length / inventoryPageState.pageSize));
+  inventoryPageState.currentPage = Math.min(inventoryPageState.currentPage, totalPages);
+  const startIndex = (inventoryPageState.currentPage - 1) * inventoryPageState.pageSize;
+  const pageItems = inventoryPageState.filteredItems.slice(startIndex, startIndex + inventoryPageState.pageSize);
+
+  if (!pageItems.length) {
+    inventoryTableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-muted">אין מוצרים התואמים לסינון הנוכחי.</td>
+      </tr>
+    `;
+    renderInventoryPagination();
+    return;
+  }
+
+  inventoryTableBody.innerHTML = pageItems
+    .map((item) => {
+      const stockStatus = formatStockStatus(item.stock, item.min_stock);
+      return `
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-3 inventory-product-cell">
+              ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.productName}" class="rounded-3 inventory-product-thumb">` : '<div class="inventory-product-thumb inventory-product-thumb--empty"><i class="bi bi-box-seam"></i></div>'}
+              <div>
+                <div class="fw-semibold">${item.productName}</div>
+                <div class="text-muted small">מיקום: ${item.location || 'מחסן ראשי'}</div>
+                <div class="text-muted small">קוד: ${item.productId}</div>
+              </div>
+            </div>
+          </td>
+          <td>${item.category}</td>
+          <td>${item.price ? `₪ ${Number(item.price).toFixed(2)}` : '—'}</td>
+          <td><span class="fw-semibold">${item.stock}</span></td>
+          <td>${item.min_stock}</td>
+          <td><span class="${stockStatus.className}">${stockStatus.label}</span></td>
+          <td>
+            <div class="d-flex gap-2 flex-wrap inventory-actions">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="+5" data-product-id="${item.productId}">+5</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="-5" data-product-id="${item.productId}">-5</button>
+              <button type="button" class="btn btn-dark btn-sm" data-adjust-stock="+1" data-product-id="${item.productId}">+1</button>
+              <button type="button" class="btn btn-outline-danger btn-sm" data-adjust-stock="-1" data-product-id="${item.productId}">-1</button>
+              <button type="button" class="btn btn-outline-dark btn-sm" data-edit-inventory="${item.productId}">ערוך</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  renderSummary(inventoryPageState.filteredItems);
+  bindInventoryButtons();
+  renderInventoryPagination();
+}
+
+function syncInventoryCategoryOptions(items) {
+  if (!inventoryCategoryFilter) return;
+  const currentValue = inventoryCategoryFilter.value;
+  const categories = [...new Set(items.map((item) => String(item.category || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+  inventoryCategoryFilter.innerHTML = `
+    <option value="">כל הקטגוריות</option>
+    ${categories.map((category) => `<option value="${category}">${category}</option>`).join('')}
+  `;
+  inventoryCategoryFilter.value = categories.includes(currentValue) ? currentValue : '';
+}
+
+function openInventoryProductModal(item = null) {
+  if (!inventoryForm) return;
+
+  if (item) {
+    loadItemIntoForm(item);
+    if (inventoryProductModalTitle) inventoryProductModalTitle.textContent = 'עריכת מוצר';
+  } else {
+    resetInventoryForm();
+    currentEditProductId = null;
+    if (inventoryProductId) inventoryProductId.readOnly = false;
+    if (inventoryProductModalTitle) inventoryProductModalTitle.textContent = 'הוספת מוצר חדש';
+  }
+
+  const modal = getInventoryProductModal();
+  modal?.show();
+}
+
+async function openInventoryMovementsModal() {
+  const modal = getInventoryMovementsModal();
+  if (modal) modal.show();
+  try {
+    await loadMovements();
+  } catch (_err) {
+    setStatus('לא ניתן לטעון תנועות מלאי כרגע.', 'danger');
+  }
+}
+
+function applyInventoryFilters(resetPage = false) {
+  if (resetPage) {
+    inventoryPageState.currentPage = 1;
+  }
+  if (!inventoryPageState.allItems.length) {
+    inventoryPageState.filteredItems = [];
+    renderInventoryPageTable();
+    return;
+  }
+  renderInventoryPageTable();
 }
 
 async function loadSupplierOptions() {
@@ -235,9 +630,53 @@ async function syncShiftNote(shiftId, notes) {
   }
 }
 
+async function loadPurchaseOrders() {
+  const response = await fetch(`${API_BASE_URL}/api/staff/purchase-orders?userId=${authUser.id}`);
+  const orders = await response.json();
+  if (!response.ok) {
+    throw new Error(orders.message || 'Failed to load purchase orders');
+  }
+
+  purchaseOrdersState.allItems = orders;
+  applyPurchaseOrderFilters(true);
+}
+
+async function updatePurchaseOrderStatus(purchaseOrderId, status) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/staff/purchase-orders/${purchaseOrderId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: authUser.id,
+        status,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update purchase order status');
+    }
+
+    setStatus('סטטוס ההזמנה עודכן בהצלחה.', 'success');
+    await loadPurchaseOrders();
+  } catch (_err) {
+    setStatus('לא ניתן לעדכן את סטטוס ההזמנה כרגע.', 'danger');
+  }
+}
+
 function formatClockValue(value) {
   if (!value) return '--';
   return new Date(value).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatMoney(value) {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount)) return '₪ 0.00';
+  return `₪ ${amount.toFixed(2)}`;
+}
+
+function formatDateTime(value) {
+  if (!value) return '--';
+  return new Date(value).toLocaleString('he-IL');
 }
 
 function formatDateValue(value) {
@@ -292,17 +731,46 @@ function renderWorkHoursReport(entries) {
   const activeShift = loadActiveShift();
   const sortedEntries = [...entries].sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
   const reportEntries = activeShift ? [activeShift, ...sortedEntries] : sortedEntries;
+  workHoursReportState.allItems = reportEntries;
+  applyWorkHoursReportFilters(true);
+}
 
-  if (!reportEntries.length) {
+function applyWorkHoursReportFilters(resetPage = false) {
+  if (resetPage) workHoursReportState.currentPage = 1;
+
+  const searchTerm = String(workHoursReportFilterInput?.value || '').trim().toLowerCase();
+  workHoursReportState.filteredItems = workHoursReportState.allItems.filter((entry) => {
+    if (!searchTerm) return true;
+    return [
+      formatDateValue(entry.checkIn),
+      formatClockValue(entry.checkIn),
+      entry.checkOut ? formatClockValue(entry.checkOut) : 'פעילה',
+      formatDuration(getEntryDuration(entry)),
+      String(entry.notes || ''),
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+
+  renderWorkHoursReportPage();
+}
+
+function renderWorkHoursReportPage() {
+  if (!workHoursReportBody) return;
+
+  const { pageItems } = getPageItems(workHoursReportState.filteredItems, workHoursReportState);
+  if (!pageItems.length) {
     workHoursReportBody.innerHTML = `
       <tr>
         <td colspan="4" class="text-muted">אין עדיין משמרות מתועדות.</td>
       </tr>
     `;
+    renderPagination(workHoursReportPagination, workHoursReportState, workHoursReportPaginationMeta, workHoursReportPageInfo, 'שורות');
     return;
   }
 
-  workHoursReportBody.innerHTML = reportEntries
+  workHoursReportBody.innerHTML = pageItems
     .map((entry) => `
       <tr>
         <td>${formatDateValue(entry.checkIn)}</td>
@@ -312,12 +780,176 @@ function renderWorkHoursReport(entries) {
       </tr>
     `)
     .join('');
+
+  renderPagination(workHoursReportPagination, workHoursReportState, workHoursReportPaginationMeta, workHoursReportPageInfo, 'שורות');
 }
 
 function renderWorkHours() {
   const entries = loadWorkHoursEntries();
   updateWorkHoursSummary(entries);
   renderWorkHoursReport(entries);
+}
+
+function renderPurchaseOrders() {
+  if (!purchaseOrdersTableBody) return;
+
+  const { pageItems } = getPageItems(purchaseOrdersState.filteredItems, purchaseOrdersState);
+  if (!pageItems.length) {
+    purchaseOrdersTableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-muted">אין הזמנות התואמות לסינון הנוכחי.</td>
+      </tr>
+    `;
+    renderPagination(purchaseOrdersPagination, purchaseOrdersState, purchaseOrdersPaginationMeta, purchaseOrdersPageInfo, 'הזמנות');
+    return;
+  }
+
+  purchaseOrdersTableBody.innerHTML = pageItems
+    .map(
+      (order) => `
+        <tr>
+          <td>
+            <div class="fw-semibold">${escapeHtml(order.supplierName || '')}</div>
+            <div class="text-muted small">${escapeHtml(order.supplierCode || '--')} · ${escapeHtml(order.productCategory || '--')}</div>
+          </td>
+          <td>
+            <div class="fw-semibold">${escapeHtml(order.subject || 'הזמנה חדשה')}</div>
+            <div class="text-muted small">${escapeHtml(order.body || '')}</div>
+          </td>
+          <td>
+            <span class="badge text-bg-light border">${escapeHtml(order.itemCount ?? 0)} פריטים</span>
+          </td>
+          <td>
+            <span class="badge ${getPurchaseOrderStatusClass(order.status)}">${getPurchaseOrderStatusLabel(order.status)}</span>
+          </td>
+          <td>
+            ${renderStatusSelect(order.status, order.id)}
+          </td>
+          <td>${escapeHtml(order.createdBy || '--')}</td>
+          <td>${formatDateTime(order.createdAt)}</td>
+          <td>
+            <button type="button" class="btn btn-dark btn-sm" data-purchase-order-save="${order.id}">שמור סטטוס</button>
+          </td>
+        </tr>
+      `
+    )
+    .join('');
+
+  bindPurchaseOrderButtons();
+  renderPagination(purchaseOrdersPagination, purchaseOrdersState, purchaseOrdersPaginationMeta, purchaseOrdersPageInfo, 'הזמנות');
+}
+
+function applyPurchaseOrderFilters(resetPage = false) {
+  if (resetPage) purchaseOrdersState.currentPage = 1;
+
+  const searchTerm = String(purchaseOrdersSearchInput?.value || '').trim().toLowerCase();
+  const statusFilter = String(purchaseOrdersStatusFilter?.value || 'open').trim();
+
+  purchaseOrdersState.filteredItems = purchaseOrdersState.allItems.filter((order) => {
+    const normalizedStatus = String(order.status || '').trim().toLowerCase();
+    const matchesSearch =
+      !searchTerm ||
+      String(order.supplierName || '').toLowerCase().includes(searchTerm) ||
+      String(order.supplierCode || '').toLowerCase().includes(searchTerm) ||
+      String(order.subject || '').toLowerCase().includes(searchTerm) ||
+      String(order.body || '').toLowerCase().includes(searchTerm) ||
+      String(order.createdBy || '').toLowerCase().includes(searchTerm);
+
+    const matchesStatus =
+      statusFilter === 'all'
+        ? true
+        : statusFilter === 'open'
+          ? isOpenPurchaseOrderStatus(normalizedStatus)
+          : normalizedStatus === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  renderPurchaseOrders();
+}
+
+function bindPurchaseOrderButtons() {
+  document.querySelectorAll('[data-purchase-order-save]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const orderId = button.dataset.purchaseOrderSave;
+      const select = document.querySelector(`[data-purchase-order-status="${orderId}"]`);
+      if (!select) return;
+      updatePurchaseOrderStatus(orderId, select.value);
+    });
+  });
+}
+
+async function loadCustomerOrders() {
+  const response = await fetch(`${API_BASE_URL}/api/staff/customer-orders?userId=${authUser.id}`);
+  const orders = await response.json();
+  if (!response.ok) {
+    throw new Error(orders.message || 'Failed to load customer orders');
+  }
+
+  customerOrdersState.allItems = orders;
+  applyCustomerOrdersFilters(true);
+}
+
+function renderCustomerOrders() {
+  if (!customerOrdersTableBody) return;
+
+  const { pageItems } = getPageItems(customerOrdersState.filteredItems, customerOrdersState);
+  if (!pageItems.length) {
+    customerOrdersTableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-muted">אין הזמנות לקוחות התואמות לסינון הנוכחי.</td>
+      </tr>
+    `;
+    renderPagination(customerOrdersPagination, customerOrdersState, customerOrdersPaginationMeta, customerOrdersPageInfo, 'הזמנות');
+    return;
+  }
+
+  customerOrdersTableBody.innerHTML = pageItems
+    .map(
+      (order) => `
+        <tr>
+          <td>
+            <div class="fw-semibold">#${escapeHtml(order.id)}</div>
+            <div class="text-muted small">${escapeHtml(order.customerType || 'פרטי')}</div>
+          </td>
+          <td>
+            <div class="fw-semibold">${escapeHtml(order.customerName || '--')}</div>
+            <div class="text-muted small">${escapeHtml(order.customerEmail || '--')}</div>
+          </td>
+          <td>
+            <span class="badge text-bg-light border">${escapeHtml(order.itemCount ?? 0)} פריטים</span>
+          </td>
+          <td>${formatMoney(order.totalAmount)}</td>
+          <td>${formatDateTime(order.createdAt)}</td>
+        </tr>
+      `
+    )
+    .join('');
+
+  renderPagination(customerOrdersPagination, customerOrdersState, customerOrdersPaginationMeta, customerOrdersPageInfo, 'הזמנות');
+}
+
+function applyCustomerOrdersFilters(resetPage = false) {
+  if (resetPage) customerOrdersState.currentPage = 1;
+
+  const searchTerm = String(customerOrdersSearchInput?.value || '').trim().toLowerCase();
+  customerOrdersState.filteredItems = customerOrdersState.allItems.filter((order) => {
+    if (!searchTerm) return true;
+    return [
+      `#${order.id}`,
+      String(order.customerName || ''),
+      String(order.customerEmail || ''),
+      String(order.customerType || ''),
+      String(order.totalAmount || ''),
+      String(order.itemCount || ''),
+      formatDateTime(order.createdAt),
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+
+  renderCustomerOrders();
 }
 
 async function startShift() {
@@ -445,7 +1077,7 @@ function bindInventoryButtons() {
   document.querySelectorAll('[data-edit-inventory]').forEach((button) => {
     button.addEventListener('click', () => {
       const item = (window.__inventoryItems || []).find((entry) => entry.productId === button.dataset.editInventory);
-      if (item) loadItemIntoForm(item);
+      if (item) openInventoryProductModal(item);
     });
   });
 }
@@ -453,6 +1085,7 @@ function bindInventoryButtons() {
 function loadItemIntoForm(item) {
   currentEditProductId = item.productId;
   if (inventoryProductId) inventoryProductId.value = item.productId;
+  if (inventoryProductId) inventoryProductId.readOnly = true;
   if (inventoryProductName) inventoryProductName.value = item.productName;
   if (inventoryCategory) inventoryCategory.value = item.category;
   if (inventoryPrice) inventoryPrice.value = String(item.price ?? '');
@@ -471,6 +1104,7 @@ function resetInventoryForm() {
   currentEditProductId = null;
   if (inventoryForm) inventoryForm.reset();
   if (inventoryProductId) inventoryProductId.value = '';
+  if (inventoryProductId) inventoryProductId.readOnly = false;
   if (inventoryProductName) inventoryProductName.value = '';
   if (inventoryCategory) inventoryCategory.value = 'צבע';
   if (inventoryPrice) inventoryPrice.value = '';
@@ -488,6 +1122,26 @@ async function upsertInventoryItem(event) {
   event.preventDefault();
 
   try {
+    const imageFile = getSelectedImageFile();
+    const imageUrl = imageFile ? await readFileAsDataUrl(imageFile) : getTrimmedImageUrl();
+    const priceValue = inventoryPrice ? Number(inventoryPrice.value || 0) : null;
+    const supplierValue = String(inventorySupplierId?.value || '').trim();
+
+    if (hasInventoryManagementView && !currentEditProductId) {
+      if (!imageUrl) {
+        setStatus('יש לבחור תמונה כדי להוסיף מוצר חדש.', 'warning');
+        return;
+      }
+      if (!isSupportedImageSource(imageUrl)) {
+        setStatus('יש להזין קישור תמונה תקין או להעלות קובץ תמונה.', 'warning');
+        return;
+      }
+      if (!Number.isFinite(priceValue) || priceValue <= 0) {
+        setStatus('יש להזין מחיר תקין למוצר החדש.', 'warning');
+        return;
+      }
+    }
+
     const payload = {
       userId: authUser.id,
       productId: String(inventoryProductId?.value || '').trim(),
@@ -497,8 +1151,14 @@ async function upsertInventoryItem(event) {
       minStock: Number(inventoryMinStock?.value || 0),
       location: String(inventoryLocation?.value || 'מחסן ראשי').trim(),
     };
-    if (inventorySupplierId?.value) {
-      payload.supplierId = Number(inventorySupplierId.value);
+    if (supplierValue) {
+      payload.supplierId = Number(supplierValue);
+    }
+    if (Number.isFinite(priceValue) && priceValue > 0) {
+      payload.price = priceValue;
+    }
+    if (imageUrl) {
+      payload.imageUrl = imageUrl;
     }
 
     const response = await fetch(`${API_BASE_URL}/api/inventory/upsert`, {
@@ -513,6 +1173,10 @@ async function upsertInventoryItem(event) {
 
     clearStatus();
     resetInventoryForm();
+    if (hasInventoryManagementView) {
+      getInventoryProductModal()?.hide();
+      inventoryPageState.currentPage = 1;
+    }
     await refreshStaffData();
   } catch (_err) {
     setStatus('לא ניתן לשמור את פריט המלאי כרגע.', 'danger');
@@ -584,6 +1248,13 @@ function renderInventory(items) {
 
   window.__inventoryItems = items;
 
+  if (hasInventoryManagementView) {
+    inventoryPageState.allItems = [...items];
+    syncInventoryCategoryOptions(items);
+    applyInventoryFilters(true);
+    return;
+  }
+
   inventoryTableBody.innerHTML = items
     .map((item) => {
       const stockStatus = formatStockStatus(item.stock, item.min_stock);
@@ -609,7 +1280,7 @@ function renderInventory(items) {
               <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="+5" data-product-id="${item.productId}">+5</button>
               <button type="button" class="btn btn-outline-secondary btn-sm" data-adjust-stock="-5" data-product-id="${item.productId}">-5</button>
               <button type="button" class="btn btn-dark btn-sm" data-adjust-stock="+1" data-product-id="${item.productId}">+1</button>
-              <button type="button" class="btn btn-outline-primary btn-sm" data-edit-inventory="${item.productId}">ערוך</button>
+              <button type="button" class="btn btn-outline-dark btn-sm" data-edit-inventory="${item.productId}">ערוך</button>
             </div>
           </td>
         </tr>
@@ -622,6 +1293,33 @@ function renderInventory(items) {
 }
 
 function renderMovements(movements) {
+  if (inventoryMovementsBody) {
+    if (!movements.length) {
+      inventoryMovementsBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-muted">אין עדיין תנועות מלאי.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    inventoryMovementsBody.innerHTML = movements
+      .map(
+        (movement) => `
+          <tr>
+            <td class="fw-semibold">${escapeHtml(getInventoryProductLabel(movement.productId))}</td>
+            <td class="${movement.delta > 0 ? 'text-success' : movement.delta < 0 ? 'text-danger' : 'text-muted'}">
+              ${movement.delta > 0 ? '+' : ''}${escapeHtml(movement.delta)}
+            </td>
+            <td>${escapeHtml(movement.reason)}</td>
+            <td>${new Date(movement.createdAt).toLocaleString('he-IL')}</td>
+          </tr>
+        `
+      )
+      .join('');
+    return;
+  }
+
   if (!inventoryMovementsList) return;
 
   if (!movements.length) {
@@ -630,13 +1328,13 @@ function renderMovements(movements) {
   }
 
   inventoryMovementsList.innerHTML = movements
-    .map(
-      (movement) => `
-        <li class="border-bottom pb-2 mb-2">
-          <div class="d-flex justify-content-between gap-2">
-            <span class="fw-semibold">${movement.productId}</span>
-            <span class="${movement.delta > 0 ? 'text-success' : 'text-danger'}">${movement.delta > 0 ? '+' : ''}${movement.delta}</span>
-          </div>
+      .map(
+        (movement) => `
+          <li class="border-bottom pb-2 mb-2">
+            <div class="d-flex justify-content-between gap-2">
+              <span class="fw-semibold">${escapeHtml(getInventoryProductLabel(movement.productId))}</span>
+              <span class="${movement.delta > 0 ? 'text-success' : 'text-danger'}">${movement.delta > 0 ? '+' : ''}${movement.delta}</span>
+            </div>
           <div class="text-muted small">${movement.reason}</div>
           <div class="text-muted small">${new Date(movement.createdAt).toLocaleString('he-IL')}</div>
         </li>
@@ -688,9 +1386,25 @@ async function adjustStock(productId, delta) {
 }
 
 async function refreshStaffData() {
+  if (hasInventoryManagementView) {
+    await loadInventory();
+    if (inventoryMovementsModalEl?.classList.contains('show')) {
+      await loadMovements();
+    }
+    return;
+  }
+
   if (hasInventoryView) {
     await loadInventory();
     await loadMovements();
+  }
+
+  if (hasPurchaseOrdersView) {
+    await loadPurchaseOrders();
+  }
+
+  if (hasCustomerOrdersView) {
+    await loadCustomerOrders();
   }
 }
 
@@ -702,12 +1416,16 @@ function init() {
     staffUserLine.textContent = `מחובר כ-${authUser.fullName} · ${roleLabel}`;
   }
 
+  syncSidebarActiveState();
+
   if (managerPanel && authUser.role === 'manager') {
     managerPanel.classList.remove('d-none');
   }
 
   if (inventoryForm) {
-    if (hasProductCreateView) {
+    if (hasInventoryManagementView) {
+      inventoryForm.addEventListener('submit', upsertInventoryItem);
+    } else if (hasProductCreateView) {
       inventoryForm.addEventListener('submit', createCatalogProduct);
     } else {
       inventoryForm.addEventListener('submit', upsertInventoryItem);
@@ -717,6 +1435,98 @@ function init() {
     loadSupplierOptions();
   }
   if (inventoryResetBtn) inventoryResetBtn.addEventListener('click', resetInventoryForm);
+  if (inventoryAddProductBtn) {
+    inventoryAddProductBtn.addEventListener('click', () => openInventoryProductModal(null));
+  }
+  if (inventoryMovementsBtn) {
+    inventoryMovementsBtn.addEventListener('click', () => {
+      openInventoryMovementsModal();
+    });
+  }
+  if (inventorySearchInput) {
+    inventorySearchInput.addEventListener('input', () => applyInventoryFilters(true));
+  }
+  if (inventoryCategoryFilter) {
+    inventoryCategoryFilter.addEventListener('change', () => applyInventoryFilters(true));
+  }
+  if (inventoryClearFiltersBtn) {
+    inventoryClearFiltersBtn.addEventListener('click', () => {
+      if (inventorySearchInput) inventorySearchInput.value = '';
+      if (inventoryCategoryFilter) inventoryCategoryFilter.value = '';
+      applyInventoryFilters(true);
+    });
+  }
+  if (inventoryPagination) {
+    inventoryPagination.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-page]');
+      if (!target || target.disabled) return;
+      const page = Number(target.dataset.page);
+      if (!Number.isInteger(page) || page < 1) return;
+      inventoryPageState.currentPage = page;
+      renderInventoryPageTable();
+    });
+  }
+  if (purchaseOrdersSearchInput) {
+    purchaseOrdersSearchInput.addEventListener('input', () => applyPurchaseOrderFilters(true));
+  }
+  if (purchaseOrdersStatusFilter) {
+    purchaseOrdersStatusFilter.addEventListener('change', () => applyPurchaseOrderFilters(true));
+  }
+  if (purchaseOrdersClearFiltersBtn) {
+    purchaseOrdersClearFiltersBtn.addEventListener('click', () => {
+      if (purchaseOrdersSearchInput) purchaseOrdersSearchInput.value = '';
+      if (purchaseOrdersStatusFilter) purchaseOrdersStatusFilter.value = 'open';
+      applyPurchaseOrderFilters(true);
+    });
+  }
+  if (purchaseOrdersPagination) {
+    purchaseOrdersPagination.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-page]');
+      if (!target || target.disabled) return;
+      const page = Number(target.dataset.page);
+      if (!Number.isInteger(page) || page < 1) return;
+      purchaseOrdersState.currentPage = page;
+      renderPurchaseOrders();
+    });
+  }
+  if (customerOrdersSearchInput) {
+    customerOrdersSearchInput.addEventListener('input', () => applyCustomerOrdersFilters(true));
+  }
+  if (customerOrdersPagination) {
+    customerOrdersPagination.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-page]');
+      if (!target || target.disabled) return;
+      const page = Number(target.dataset.page);
+      if (!Number.isInteger(page) || page < 1) return;
+      customerOrdersState.currentPage = page;
+      renderCustomerOrders();
+    });
+  }
+  if (workHoursReportFilterInput) {
+    workHoursReportFilterInput.addEventListener('input', () => applyWorkHoursReportFilters(true));
+  }
+  if (workHoursReportClearFiltersBtn) {
+    workHoursReportClearFiltersBtn.addEventListener('click', () => {
+      if (workHoursReportFilterInput) workHoursReportFilterInput.value = '';
+      applyWorkHoursReportFilters(true);
+    });
+  }
+  if (workHoursReportPagination) {
+    workHoursReportPagination.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-page]');
+      if (!target || target.disabled) return;
+      const page = Number(target.dataset.page);
+      if (!Number.isInteger(page) || page < 1) return;
+      workHoursReportState.currentPage = page;
+      renderWorkHoursReportPage();
+    });
+  }
+  if (inventoryProductModalEl) {
+    inventoryProductModalEl.addEventListener('hidden.bs.modal', () => {
+      resetInventoryForm();
+      if (inventoryProductModalTitle) inventoryProductModalTitle.textContent = 'הוספת מוצר חדש';
+    });
+  }
   if (inventoryImageUrl) {
     inventoryImageUrl.addEventListener('input', () => {
       const url = getTrimmedImageUrl();
@@ -747,6 +1557,13 @@ function init() {
   if (workHoursCheckOutBtn) workHoursCheckOutBtn.addEventListener('click', endShift);
   if (workHoursSaveNoteBtn) workHoursSaveNoteBtn.addEventListener('click', saveShiftNote);
   if (workHoursExportBtn) workHoursExportBtn.addEventListener('click', exportWorkHoursReport);
+  if (staffLogoutLink) {
+    staffLogoutLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      localStorage.removeItem('authUser');
+      window.location.href = 'login.html';
+    });
+  }
 
   if (hasInventoryView && hasWorkHoursView) {
     setStatus('כאן אפשר לנהל מלאי ולעקוב אחרי שעות עבודה מהמסכים הייעודיים.', 'info');
@@ -755,6 +1572,10 @@ function init() {
   } else if (hasInventoryFormView) {
     setStatus('כאן אפשר להוסיף מוצר חדש למערכת עם תמונה ומחיר.', 'info');
     resetImagePreview();
+  } else if (hasPurchaseOrdersView) {
+    setStatus('כאן רואים הזמנות חדשות ויכולים לעדכן את הסטטוס שלהן.', 'info');
+  } else if (hasCustomerOrdersView) {
+    setStatus('כאן רואים הזמנות לקוחות שבוצעו באתר.', 'info');
   } else if (hasWorkHoursView) {
     setStatus('כאן אפשר לתעד כניסה ויציאה למשמרת ולייצא את דו"ח השעות.', 'info');
   } else {
@@ -769,6 +1590,18 @@ function init() {
 
   if (hasWorkHoursView) {
     renderWorkHours();
+  }
+
+  if (hasPurchaseOrdersView) {
+    refreshStaffData().catch(() => {
+      setStatus('שגיאה בטעינת הזמנות רכש. ודא שהשרת רץ ושהמשתמש הוא עובד/מנהל.', 'danger');
+    });
+  }
+
+  if (hasCustomerOrdersView) {
+    refreshStaffData().catch(() => {
+      setStatus('שגיאה בטעינת הזמנות לקוחות. ודא שהשרת רץ ושהמשתמש הוא עובד/מנהל.', 'danger');
+    });
   }
 }
 

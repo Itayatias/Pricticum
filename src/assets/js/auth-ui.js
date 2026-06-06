@@ -11,6 +11,29 @@ function clearAuth() {
   localStorage.removeItem('authUser');
 }
 
+const DEV_SESSION_STORAGE_KEY = 'devSessionId';
+const DEV_SESSION_ENDPOINT = 'http://localhost:4000/api/dev-session';
+
+async function syncDevSession() {
+  try {
+    const response = await fetch(DEV_SESSION_ENDPOINT, { cache: 'no-store' });
+    if (!response.ok) return;
+
+    const data = await response.json();
+    const currentSessionId = String(data?.devSessionId || '');
+    if (!currentSessionId) return;
+
+    const storedSessionId = localStorage.getItem(DEV_SESSION_STORAGE_KEY);
+    if (storedSessionId !== currentSessionId) {
+      clearAuth();
+    }
+
+    localStorage.setItem(DEV_SESSION_STORAGE_KEY, currentSessionId);
+  } catch (_err) {
+    // If the dev server is not running, preserve the current auth state.
+  }
+}
+
 function getLoginHref() {
   const isInPages = window.location.pathname.includes('/pages/');
   return isInPages ? './login.html' : './pages/login.html';
@@ -174,4 +197,9 @@ function updateNavAuthState() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', updateNavAuthState);
+async function initAuthUi() {
+  await syncDevSession();
+  document.addEventListener('DOMContentLoaded', updateNavAuthState);
+}
+
+initAuthUi();

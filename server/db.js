@@ -112,10 +112,13 @@ db.serialize(() => {
       body TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'draft',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(supplier_id) REFERENCES suppliers(id),
       FOREIGN KEY(created_by_user_id) REFERENCES users(id)
     )
   `);
+
+  db.run('ALTER TABLE purchase_orders ADD COLUMN updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP', () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS purchase_order_items (

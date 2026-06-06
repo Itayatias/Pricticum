@@ -5,10 +5,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#edf9f7" />
-  <title>דו"ח שעות עבודה - נבלט בע״מ</title>
+  <title>הזמנות רכש - נבלט בע״מ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <script type="module" crossorigin src="../assets/js/main.js"></script>
+  <script type="module" crossorigin src="../assets/js/staff.js"></script>
+  <link rel="stylesheet" crossorigin href="../assets/css/main.css">
 </head>
 
 <body class="staff-page">
@@ -17,7 +20,7 @@
       <header class="manager-topbar">
         <div class="manager-topbar__title-wrap">
           <div class="manager-topbar__eyebrow">אזור עובדים</div>
-          <h1 class="manager-topbar__title mb-0">דו"ח שעות עבודה</h1>
+          <h1 class="manager-topbar__title mb-0">הזמנות רכש</h1>
         </div>
 
         <div class="manager-topbar__actions">
@@ -34,48 +37,71 @@
       <main class="manager-main">
         <section class="manager-hero">
           <div class="manager-hero__copy">
-            <p class="manager-kicker mb-2">דו"ח ותיעוד</p>
-            <h2 class="manager-hero__title mb-3">צפייה וייצוא של נתוני העבודה</h2>
+            <p class="manager-kicker mb-2">הזמנות חדשות</p>
+            <h2 class="manager-hero__title mb-3">צפייה ועדכון סטטוס להזמנות רכש</h2>
             <p id="staffUserLine" class="manager-hero__text mb-3">טוען פרטי משתמש...</p>
             <div class="manager-breadcrumb">
               <a href="staff.html">אזור עובדים</a>
               <span>/</span>
-              <a href="staff-work-report.html">דו"ח שעות עבודה</a>
+              <a href="staff-purchase-orders.html">הזמנות רכש</a>
             </div>
           </div>
 
-          <a class="manager-release" href="staff-work-hours.html">
-            <i class="bi bi-clock-history"></i>
+          <a class="manager-release" href="staff-inventory.html">
+            <i class="bi bi-box-seam-fill"></i>
             <span>קיצור דרך</span>
-            <strong>לתיעוד שעות</strong>
+            <strong>למלאי החנות</strong>
           </a>
         </section>
 
         <div id="staffStatus" class="manager-alert d-none mb-4" role="alert"></div>
 
+        <section class="manager-quick-stats">
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">הזמנות פעילות</span>
+            <strong class="manager-mini-card__value">חדשות + בתהליך</strong>
+          </article>
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">סטטוס עבודה</span>
+            <strong class="manager-mini-card__value">חדש / בתהליך / ליקוט / בוצע</strong>
+          </article>
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">עמודים</span>
+            <strong class="manager-mini-card__value">עד 15 הזמנות בכל עמוד</strong>
+          </article>
+        </section>
+
         <section class="manager-panel manager-panel--orders">
           <div class="manager-panel__header">
             <div>
-              <h3 class="manager-panel__title">דו"ח שעות עבודה</h3>
-              <p class="manager-panel__subtitle mb-0">מקסימום 15 שורות בעמוד, עם סינון לפי טקסט וניווט בין עמודים.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-              <button type="button" id="workHoursExportBtn" class="btn btn-primary">ייצוא דו"ח</button>
+              <h3 class="manager-panel__title">טבלת הזמנות רכש</h3>
+              <p class="manager-panel__subtitle mb-0">כל הזמנה כוללת שם ספק, נושא, תאריך יצירה ועריכת סטטוס מהירה.</p>
             </div>
           </div>
 
           <div class="inventory-toolbar manager-panel mb-4">
             <div class="inventory-toolbar__actions">
-              <div id="workHoursReportPageInfo" class="inventory-toolbar__info">טוען...</div>
+              <div id="staffPurchaseOrdersPageInfo" class="inventory-toolbar__info">טוען הזמנות...</div>
             </div>
             <div class="inventory-toolbar__filters">
               <div class="inventory-filter">
                 <label class="form-label mb-1">חיפוש</label>
-                <input id="workHoursReportFilterInput" type="search" class="form-control" placeholder="חיפוש לפי תאריך או הערות">
+                <input id="staffPurchaseOrdersSearchInput" type="search" class="form-control" placeholder="חיפוש לפי ספק, נושא או יוצר">
+              </div>
+              <div class="inventory-filter">
+                <label class="form-label mb-1">סטטוס</label>
+                <select id="staffPurchaseOrdersStatusFilter" class="form-select">
+                  <option value="open" selected>פתוחות</option>
+                  <option value="all">הכול</option>
+                  <option value="new">חדש</option>
+                  <option value="in_progress">בתהליך</option>
+                  <option value="picking">ליקוט</option>
+                  <option value="done">בוצע</option>
+                </select>
               </div>
               <div class="inventory-filter inventory-filter--actions">
                 <label class="form-label mb-1 invisible">ניקוי</label>
-                <button id="workHoursReportClearFiltersBtn" type="button" class="btn btn-outline-secondary w-100">ניקוי סינון</button>
+                <button id="staffPurchaseOrdersClearFiltersBtn" type="button" class="btn btn-outline-secondary w-100">ניקוי סינון</button>
               </div>
             </div>
           </div>
@@ -84,19 +110,23 @@
             <table class="table align-middle manager-table mb-0">
               <thead>
                 <tr>
+                  <th>ספק</th>
+                  <th>הזמנה</th>
+                  <th>מוצרים</th>
+                  <th>סטטוס נוכחי</th>
+                  <th>עדכון סטטוס</th>
+                  <th>נוצר ע"י</th>
                   <th>תאריך</th>
-                  <th>כניסה</th>
-                  <th>יציאה</th>
-                  <th>משך</th>
+                  <th>פעולה</th>
                 </tr>
               </thead>
-              <tbody id="workHoursReportBody"></tbody>
+              <tbody id="staffPurchaseOrdersTable"></tbody>
             </table>
           </div>
 
           <div class="inventory-pagination">
-            <div id="workHoursReportPaginationMeta" class="inventory-pagination__meta">--</div>
-            <div id="workHoursReportPagination" class="inventory-pagination__controls"></div>
+            <div id="staffPurchaseOrdersPaginationMeta" class="inventory-pagination__meta">--</div>
+            <div id="staffPurchaseOrdersPagination" class="inventory-pagination__controls"></div>
           </div>
         </section>
       </main>
@@ -151,8 +181,6 @@
     </aside>
   </div>
 
-  <script type="module" src="../assets/js/main.js"></script>
-  <script type="module" src="../assets/js/staff.js"></script>
 </body>
 
 </html>

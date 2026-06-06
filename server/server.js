@@ -99,6 +99,12 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'auth-api' });
 });
 
+app.get('/api/dev-session', (_req, res) => {
+  res.json({
+    devSessionId: process.env.DEV_SESSION_ID || null,
+  });
+});
+
 app.get('/api/users', (_req, res) => {
   db.all(
     `SELECT id, full_name AS fullName, email, role, customer_type AS customerType, password_plain AS password, created_at AS createdAt
@@ -141,6 +147,17 @@ function getDateKey(value) {
 
 function formatDateKey(value) {
   return new Date(value).toLocaleDateString('he-IL');
+}
+
+function normalizePurchaseOrderStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['new', 'in_progress', 'picking', 'done'].includes(normalized)) {
+    return normalized;
+  }
+  if (normalized === 'draft' || normalized === 'sent') {
+    return 'new';
+  }
+  return 'new';
 }
 
 app.post('/api/auth/register', async (req, res) => {
@@ -514,6 +531,42 @@ app.get('/api/inventory/public', (_req, res) => {
   );
 });
 
+app.get('/api/staff/customer-orders', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.all(
+      `SELECT o.id,
+              o.total_amount AS totalAmount,
+              o.created_at AS createdAt,
+              u.full_name AS customerName,
+              u.email AS customerEmail,
+              u.customer_type AS customerType,
+              COUNT(oi.id) AS itemCount
+       FROM orders o
+       INNER JOIN users u ON u.id = o.user_id
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       GROUP BY o.id
+       ORDER BY o.id DESC`,
+      [],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Failed to fetch customer orders' });
+        return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
 app.get('/api/suppliers', async (req, res) => {
   const userId = Number(req.query.userId);
   if (!Number.isInteger(userId) || userId <= 0) {
@@ -623,7 +676,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
                     db.get(
                       `SELECT COUNT(*) AS openPurchaseOrders
                        FROM purchase_orders
-                       WHERE status IN ('draft', 'sent')`,
+                       WHERE status IN ('new', 'in_progress', 'picking')`,
                       [],
                       (purchaseOrderErr, purchaseOrderStats) => {
                         if (purchaseOrderErr) return res.status(500).json({ message: 'Failed to load purchase order stats' });
@@ -943,13 +996,16 @@ app.get('/api/inventory/movements', async (req, res) => {
 });
 
 app.post('/api/inventory/upsert', async (req, res) => {
-  const { userId, productId, productName, category, stock, minStock, location, supplierId } = req.body || {};
+  const { userId, productId, productName, category, stock, minStock, location, supplierId, price, imageUrl } = req.body || {};
   const numericUserId = Number(userId);
   const numericStock = Number(stock);
   const numericMinStock = Number(minStock);
   const numericSupplierId = supplierId === undefined || supplierId === null || supplierId === ''
     ? null
     : Number(supplierId);
+  const hasPrice = price !== undefined && price !== null && String(price).trim() !== '';
+  const numericPrice = hasPrice ? Number(price) : null;
+  const normalizedImageUrl = String(imageUrl || '').trim();
 
   if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
     return res.status(400).json({ message: 'Valid userId is required' });
@@ -966,6 +1022,12 @@ app.post('/api/inventory/upsert', async (req, res) => {
   if (numericSupplierId !== null && (!Number.isInteger(numericSupplierId) || numericSupplierId <= 0)) {
     return res.status(400).json({ message: 'supplierId must be a valid integer' });
   }
+  if (hasPrice && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
+    return res.status(400).json({ message: 'Price must be a positive number' });
+  }
+  if (normalizedImageUrl && !/^(data:image\/|https?:\/\/|\.{1,2}\/|\/)/i.test(normalizedImageUrl)) {
+    return res.status(400).json({ message: 'Image URL must be a valid link or data URL' });
+  }
 
   try {
     const user = await authorizeUser(numericUserId, ['employee', 'manager']);
@@ -980,9 +1042,17 @@ app.post('/api/inventory/upsert', async (req, res) => {
       numericMinStock,
       String(location || 'מחסן ראשי').trim(),
     ];
+    const hasPriceColumn = hasPrice;
+    const hasImageColumn = Boolean(normalizedImageUrl);
     const hasSupplier = numericSupplierId !== null;
     const insertColumns = ['product_id', 'product_name', 'category', 'stock', 'min_stock', 'location'];
     const insertPlaceholders = ['?', '?', '?', '?', '?', '?'];
+    insertColumns.push('product_price');
+    insertPlaceholders.push('?');
+    baseValues.push(hasPriceColumn ? numericPrice : null);
+    insertColumns.push('product_image_url');
+    insertPlaceholders.push('?');
+    baseValues.push(hasImageColumn ? normalizedImageUrl : null);
     if (hasSupplier) {
       insertColumns.push('supplier_id');
       insertPlaceholders.push('?');
@@ -995,6 +1065,8 @@ app.post('/api/inventory/upsert', async (req, res) => {
       'stock = excluded.stock',
       'min_stock = excluded.min_stock',
       'location = excluded.location',
+      'product_price = COALESCE(excluded.product_price, inventory_items.product_price)',
+      'product_image_url = COALESCE(excluded.product_image_url, inventory_items.product_image_url)',
       'updated_at = CURRENT_TIMESTAMP',
     ];
     if (hasSupplier) {
@@ -1435,7 +1507,7 @@ app.post('/api/admin/purchase-orders', async (req, res) => {
   const { userId, supplierId, status, subject, body, items } = req.body || {};
   const numericUserId = Number(userId);
   const numericSupplierId = Number(supplierId);
-  const normalizedStatus = ['draft', 'sent'].includes(status) ? status : 'sent';
+  const normalizedStatus = normalizePurchaseOrderStatus(status);
 
   if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
     return res.status(400).json({ message: 'Valid userId is required' });
@@ -1548,6 +1620,85 @@ app.post('/api/admin/purchase-orders', async (req, res) => {
             finalizeInsert(subject ? String(subject).trim() : draft.subject, body ? String(body).trim() : draft.body, orderItems);
           }
         );
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.get('/api/staff/purchase-orders', async (req, res) => {
+  const userId = Number(req.query.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.all(
+      `SELECT po.id,
+              po.subject,
+              po.body,
+              po.status,
+              po.created_at AS createdAt,
+              po.updated_at AS updatedAt,
+              s.id AS supplierId,
+              s.supplier_name AS supplierName,
+              s.supplier_code AS supplierCode,
+              s.product_category AS productCategory,
+              s.email,
+              s.phone,
+              u.full_name AS createdBy,
+              (SELECT COUNT(*) FROM purchase_order_items poi WHERE poi.purchase_order_id = po.id) AS itemCount
+       FROM purchase_orders po
+       INNER JOIN suppliers s ON s.id = po.supplier_id
+       INNER JOIN users u ON u.id = po.created_by_user_id
+       ORDER BY po.id DESC`,
+      [],
+      (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Failed to fetch staff purchase orders' });
+        return res.json(rows);
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.post('/api/staff/purchase-orders/:id/status', async (req, res) => {
+  const userId = Number(req.body?.userId);
+  const purchaseOrderId = Number(req.params.id);
+  const status = normalizePurchaseOrderStatus(req.body?.status);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!Number.isInteger(purchaseOrderId) || purchaseOrderId <= 0) {
+    return res.status(400).json({ message: 'Valid purchase order id is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.run(
+      `UPDATE purchase_orders
+       SET status = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [status, purchaseOrderId],
+      function onUpdate(err) {
+        if (err) return res.status(500).json({ message: 'Failed to update purchase order status' });
+        if (this.changes === 0) return res.status(404).json({ message: 'Purchase order not found' });
+        return res.json({
+          message: 'Purchase order status updated successfully',
+          status,
+        });
       }
     );
   } catch (_err) {

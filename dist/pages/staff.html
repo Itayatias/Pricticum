@@ -4,168 +4,215 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#edf9f7" />
   <title>אזור עובדים - נבלט בע״מ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <script type="module" crossorigin src="../assets/js/main.js"></script>
   <script type="module" crossorigin src="../assets/js/staff.js"></script>
   <link rel="stylesheet" crossorigin href="../assets/css/main.css">
 </head>
 
-<body class="font-sans text-gray-800">
-  <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
-    <div class="container-fluid px-0">
-      <a class="navbar-brand" href="../index.html">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid"
-              style="max-height: 50px;"></span>
-        </span>
-      </a>
+<body class="staff-page">
+  <div class="manager-layout">
+    <div class="manager-content">
+      <header class="manager-topbar">
+        <div class="manager-topbar__title-wrap">
+          <div class="manager-topbar__eyebrow">אזור עובדים</div>
+          <h1 class="manager-topbar__title mb-0">לוח עבודה תפעולי</h1>
+        </div>
 
-      <div class="mx-auto d-lg-block d-none">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="staff.html">אזור עובדים</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-inventory.html">מלאי החנות</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-new-product.html">הוספת מוצר חדש</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-work-hours.html">תיעוד שעות עבודה</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-work-report.html">דו"ח שעות עבודה</a></li>
-        </ul>
-      </div>
-
-      <div class="d-flex align-items-center gap-4">
-        <a href="products.html#cart-section"
-          class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link"
-          data-bs-toggle="tooltip" data-bs-placement="bottom" title="מעבר לסל הקניות שלך">
-          <span><i class="bi bi-cart3"></i></span>
-          <span>סל לקוח: <span class="header-cart-count">0</span></span>
-        </a>
-        <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list"
-            viewBox="0 0 16 16">
-            <path fill-rule="evenodd"
-              d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </nav>
-
-  <main>
-    <section class="py-lg-8 py-5">
-      <div class="container">
-        <div class="bg-light border rounded-4 p-4 p-lg-5">
-          <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
-            <div>
-              <p class="text-uppercase text-xs fw-semibold text-muted mb-2">אזור עובדים</p>
-              <h1 class="display-6 mb-2">מסך הבית של עובדי החנות</h1>
-              <p id="staffUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
-            </div>
-            <div class="d-flex gap-2">
-              <a href="staff-inventory.html" class="btn btn-outline-dark">למלאי החנות</a>
-              <a href="staff-work-hours.html" class="btn btn-outline-secondary">לתיעוד שעות</a>
-            </div>
-          </div>
-
-          <div id="staffStatus" class="alert alert-info d-none mb-4" role="alert"></div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">מלאי החנות</div>
-                <div class="h3 mb-2">ניהול מלאי</div>
-                <p class="text-muted mb-3">עדכון כמויות, עריכת פריטים ומעקב אחרי סטטוס המלאי.</p>
-                <a href="staff-inventory.html" class="btn btn-outline-dark btn-sm">מעבר למסך</a>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">הוספת מוצר חדש</div>
-                <div class="h3 mb-2">פתיחת פריט</div>
-                <p class="text-muted mb-3">הקמת מוצר חדש במערכת עם פרטי קטגוריה, מלאי ומיקום.</p>
-                <a href="staff-new-product.html" class="btn btn-outline-dark btn-sm">להוספה</a>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="text-muted small mb-1">שעות עבודה</div>
-                <div class="h3 mb-2">תיעוד ודוח</div>
-                <p class="text-muted mb-3">כניסה, יציאה, הערות משמרת וייצוא דו"ח שעות.</p>
-                <a href="staff-work-report.html" class="btn btn-outline-secondary btn-sm">לדו"ח</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-7">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <h2 class="h5 mb-3">המסכים הזמינים לעובד</h2>
-                <div class="list-group list-group-flush">
-                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-inventory.html">
-                    <span>
-                      <span class="fw-semibold d-block">מלאי החנות</span>
-                      <span class="text-muted small">צפייה, עדכון, הפחתה והוספה של מלאי</span>
-                    </span>
-                    <span class="badge text-bg-dark">פתח</span>
-                  </a>
-                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-new-product.html">
-                    <span>
-                      <span class="fw-semibold d-block">הוספת מוצר חדש</span>
-                      <span class="text-muted small">פתיחת מוצר חדש במערכת עם כל פרטי הבסיס</span>
-                    </span>
-                    <span class="badge text-bg-dark">פתח</span>
-                  </a>
-                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-hours.html">
-                    <span>
-                      <span class="fw-semibold d-block">תיעוד שעות עבודה</span>
-                      <span class="text-muted small">כניסה, יציאה, הערות משמרת ושמירת נוכחות</span>
-                    </span>
-                    <span class="badge text-bg-dark">פתח</span>
-                  </a>
-                  <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-report.html">
-                    <span>
-                      <span class="fw-semibold d-block">דו"ח שעות עבודה</span>
-                      <span class="text-muted small">צפייה וייצוא של נתוני העבודה</span>
-                    </span>
-                    <span class="badge text-bg-dark">פתח</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-5">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <h2 class="h5 mb-3">הנחיות קצרות</h2>
-                <ul class="text-muted mb-0">
-                  <li class="mb-2">כל מסך פועל עכשיו כעמוד עצמאי.</li>
-                  <li class="mb-2">הפעולות התפעוליות נשמרות לפי המשתמש המחובר.</li>
-                  <li class="mb-2">אפשר לחזור תמיד לכאן דרך "אזור עובדים".</li>
-                </ul>
-              </div>
+        <div class="manager-topbar__actions">
+          <div class="manager-profile" aria-label="פרטי משתמש">
+            <div class="manager-profile__avatar">ע</div>
+            <div class="manager-profile__meta">
+              <span>מחובר כעובד</span>
+              <strong>אזור עובדים</strong>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </header>
 
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
-    <div class="offcanvas-header px-4">
-      <a class="navbar-brand" href="../index.html">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid"
-              style="max-height: 50px;"></span>
+      <main class="manager-main">
+        <section class="manager-hero">
+          <div class="manager-hero__copy">
+            <p class="manager-kicker mb-2">אזור עובדים</p>
+            <h2 class="manager-hero__title mb-3">מסך הבית של עובדי החנות</h2>
+            <p id="staffUserLine" class="manager-hero__text mb-3">טוען פרטי משתמש...</p>
+            <div class="manager-breadcrumb">
+              <a href="staff.html">אזור עובדים</a>
+              <span>/</span>
+              <a href="staff-inventory.html">מלאי</a>
+              <span>/</span>
+              <a href="staff-work-hours.html">שעות עבודה</a>
+            </div>
+          </div>
+
+          <a class="manager-release" href="staff-inventory.html">
+            <i class="bi bi-box-seam-fill"></i>
+            <span>קיצור דרך</span>
+            <strong>למלאי החנות</strong>
+          </a>
+        </section>
+
+        <div id="staffStatus" class="manager-alert d-none mb-4" role="alert"></div>
+
+        <section class="manager-quick-stats">
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">מלאי חנות</span>
+            <strong class="manager-mini-card__value">מעקב ותפעול</strong>
+          </article>
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">מוצרים חדשים</span>
+            <strong class="manager-mini-card__value">הוספה מהירה</strong>
+          </article>
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">הזמנות רכש</span>
+            <strong class="manager-mini-card__value">עדכון סטטוסים</strong>
+          </article>
+          <article class="manager-mini-card">
+            <span class="manager-mini-card__label">שעות עבודה</span>
+            <strong class="manager-mini-card__value">תיעוד ודו״ח</strong>
+          </article>
+        </section>
+
+        <section class="manager-grid">
+          <article class="manager-panel">
+            <div class="manager-panel__header">
+              <div>
+                <h3 class="manager-panel__title">מלאי החנות</h3>
+                <p class="manager-panel__subtitle mb-0">עדכון כמויות, עריכת פריטים ומעקב אחרי סטטוס המלאי.</p>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="staff-inventory.html" class="btn btn-dark">למלאי החנות</a>
+              <a href="staff-new-product.html" class="btn btn-outline-dark">הוספת מוצר חדש</a>
+            </div>
+          </article>
+
+          <article class="manager-panel">
+            <div class="manager-panel__header">
+              <div>
+                <h3 class="manager-panel__title">הזמנות רכש</h3>
+                <p class="manager-panel__subtitle mb-0">צפייה בהזמנות חדשות ועדכון הסטטוס שלהן.</p>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="staff-purchase-orders.html" class="btn btn-dark">להזמנות רכש</a>
+              <a href="staff-purchase-orders.html" class="btn btn-outline-dark">ניהול סטטוסים</a>
+            </div>
+          </article>
+
+          <article class="manager-panel">
+            <div class="manager-panel__header">
+              <div>
+                <h3 class="manager-panel__title">שעות עבודה</h3>
+                <p class="manager-panel__subtitle mb-0">כניסה, יציאה, הערות משמרת וייצוא דו"ח שעות.</p>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="staff-work-hours.html" class="btn btn-dark">לתיעוד שעות</a>
+              <a href="staff-work-report.html" class="btn btn-outline-dark">לדו"ח שעות</a>
+            </div>
+          </article>
+
+          <article class="manager-panel manager-panel--orders">
+            <div class="manager-panel__header">
+              <div>
+                <h3 class="manager-panel__title">המסכים הזמינים לעובד</h3>
+                <p class="manager-panel__subtitle mb-0">גישה מהירה לכל המסכים התפעוליים.</p>
+              </div>
+            </div>
+            <div class="list-group list-group-flush">
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-inventory.html">
+                <span>
+                  <span class="fw-semibold d-block">מלאי החנות</span>
+                  <span class="text-muted small">צפייה, עדכון, הפחתה והוספה של מלאי</span>
+                </span>
+                <span class="badge text-bg-dark">פתח</span>
+              </a>
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-new-product.html">
+                <span>
+                  <span class="fw-semibold d-block">הוספת מוצר חדש</span>
+                  <span class="text-muted small">פתיחת מוצר חדש במערכת עם כל פרטי הבסיס</span>
+                </span>
+                <span class="badge text-bg-dark">פתח</span>
+              </a>
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-purchase-orders.html">
+                <span>
+                  <span class="fw-semibold d-block">הזמנות רכש</span>
+                  <span class="text-muted small">צפייה בהזמנות ועדכון סטטוס: חדש / בתהליך / ליקוט / בוצע</span>
+                </span>
+                <span class="badge text-bg-dark">פתח</span>
+              </a>
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-hours.html">
+                <span>
+                  <span class="fw-semibold d-block">תיעוד שעות עבודה</span>
+                  <span class="text-muted small">כניסה, יציאה, הערות משמרת ושמירת נוכחות</span>
+                </span>
+                <span class="badge text-bg-dark">פתח</span>
+              </a>
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="staff-work-report.html">
+                <span>
+                  <span class="fw-semibold d-block">דו"ח שעות עבודה</span>
+                  <span class="text-muted small">צפייה וייצוא של נתוני העבודה</span>
+                </span>
+                <span class="badge text-bg-dark">פתח</span>
+              </a>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <aside class="manager-sidebar">
+      <a class="manager-brand" href="../index.html">
+        <img src="../assets/images/logo.png" alt="לוגו נבלט" class="manager-brand__logo" />
+        <span class="manager-brand__text">
+          <strong>Nevelat</strong>
+          <small>StaffHub</small>
         </span>
       </a>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-      <div class="navbar-custom">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="staff.html">אזור עובדים</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-inventory.html">מלאי החנות</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-new-product.html">הוספת מוצר חדש</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-work-hours.html">תיעוד שעות עבודה</a></li>
-          <li class="nav-item"><a class="nav-link" href="staff-work-report.html">דו"ח שעות עבודה</a></li>
-        </ul>
+
+      <nav class="manager-nav" aria-label="ניווט עובדים">
+        <a class="manager-nav__link" href="staff.html">
+          <i class="bi bi-grid-1x2-fill"></i>
+          <span>אזור עובדים</span>
+        </a>
+        <a class="manager-nav__link" href="staff-inventory.html">
+          <i class="bi bi-box-seam"></i>
+          <span>מלאי החנות</span>
+        </a>
+        <a class="manager-nav__link" href="staff-new-product.html">
+          <i class="bi bi-plus-circle"></i>
+          <span>הוספת מוצר חדש</span>
+        </a>
+        <a class="manager-nav__link" href="staff-customer-orders.html">
+          <i class="bi bi-bag-check"></i>
+          <span>הזמנות לקוחות</span>
+        </a>
+        <a class="manager-nav__link" href="staff-purchase-orders.html">
+          <i class="bi bi-truck-front"></i>
+          <span>הזמנות רכש</span>
+        </a>
+        <a class="manager-nav__link" href="staff-work-hours.html">
+          <i class="bi bi-clock-history"></i>
+          <span>תיעוד שעות עבודה</span>
+        </a>
+        <a class="manager-nav__link" href="staff-work-report.html">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>דו״ח שעות עבודה</span>
+        </a>
+      </nav>
+
+      <div class="manager-sidebar__footer">
+        <a class="manager-nav__link manager-nav__link--danger" href="login.html" data-staff-logout>
+          <i class="bi bi-box-arrow-right"></i>
+          <span>התנתקות</span>
+        </a>
       </div>
-    </div>
+    </aside>
   </div>
 
 </body>

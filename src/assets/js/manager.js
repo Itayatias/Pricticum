@@ -1,3 +1,5 @@
+import { Modal } from 'bootstrap';
+
 const API_BASE_URL = 'http://localhost:4000';
 
 const authUserRaw = localStorage.getItem('authUser');
@@ -5,6 +7,11 @@ const authUser = authUserRaw ? JSON.parse(authUserRaw) : null;
 
 const managerUserLine = document.getElementById('managerUserLine');
 const managerStatus = document.getElementById('managerStatus');
+const managerNotificationCount = document.getElementById('managerNotificationCount');
+const managerProfileName = document.getElementById('managerProfileName');
+const managerProfileInitials = document.getElementById('managerProfileInitials');
+const managerLastSync = document.getElementById('managerLastSync');
+const managerLogoutLink = document.querySelector('[data-manager-logout]');
 
 const dashboardEls = {
   totalUsers: document.getElementById('managerTotalUsers'),
@@ -16,15 +23,24 @@ const dashboardEls = {
   customers: document.getElementById('managerCustomers'),
   employees: document.getElementById('managerEmployees'),
   managers: document.getElementById('managerManagers'),
-  recentOrders: document.getElementById('managerRecentOrders'),
+  recentOrders: document.getElementById('managerRecentOrdersBody') || document.getElementById('managerRecentOrders'),
   criticalStock: document.getElementById('managerCriticalStock'),
   categorySales: document.getElementById('managerCategorySales'),
   monthlyRevenue: document.getElementById('managerMonthlyRevenue'),
 };
 
 const usersEls = {
+  modalEl: document.getElementById('managerUserModal'),
+  modalTitle: document.getElementById('managerUserModalTitle'),
   form: document.getElementById('managerUserForm'),
+  addBtn: document.getElementById('managerUserAddBtn'),
   table: document.getElementById('managerUsersTable'),
+  search: document.getElementById('managerUsersSearchInput'),
+  roleFilter: document.getElementById('managerUsersRoleFilter'),
+  clearFiltersBtn: document.getElementById('managerUsersClearFiltersBtn'),
+  pagination: document.getElementById('managerUsersPagination'),
+  paginationMeta: document.getElementById('managerUsersPaginationMeta'),
+  pageInfo: document.getElementById('managerUsersPageInfo'),
   fullName: document.getElementById('managerUserFullName'),
   email: document.getElementById('managerUserEmail'),
   password: document.getElementById('managerUserPassword'),
@@ -34,32 +50,78 @@ const usersEls = {
 };
 
 const suppliersEls = {
+  modalEl: document.getElementById('managerSupplierModal'),
+  modalTitle: document.getElementById('managerSupplierModalTitle'),
   form: document.getElementById('managerSupplierForm'),
+  addBtn: document.getElementById('managerSupplierAddBtn'),
   table: document.getElementById('managerSuppliersTable'),
   lowStock: document.getElementById('managerSupplierLowStock'),
   purchaseOrders: document.getElementById('managerPurchaseOrdersTable'),
+  search: document.getElementById('managerSuppliersSearchInput'),
+  categoryFilter: document.getElementById('managerSuppliersCategoryFilter'),
+  clearFiltersBtn: document.getElementById('managerSuppliersClearFiltersBtn'),
+  pagination: document.getElementById('managerSuppliersPagination'),
+  paginationMeta: document.getElementById('managerSuppliersPaginationMeta'),
+  pageInfo: document.getElementById('managerSuppliersPageInfo'),
   name: document.getElementById('managerSupplierName'),
   email: document.getElementById('managerSupplierEmail'),
   phone: document.getElementById('managerSupplierPhone'),
   notes: document.getElementById('managerSupplierNotes'),
   saveBtn: document.getElementById('managerSupplierSaveBtn'),
+  purchaseOrdersSearch: document.getElementById('managerPurchaseOrdersSearchInput'),
+  purchaseOrdersClearFiltersBtn: document.getElementById('managerPurchaseOrdersClearFiltersBtn'),
+  purchaseOrdersPagination: document.getElementById('managerPurchaseOrdersPagination'),
+  purchaseOrdersPaginationMeta: document.getElementById('managerPurchaseOrdersPaginationMeta'),
+  purchaseOrdersPageInfo: document.getElementById('managerPurchaseOrdersPageInfo'),
 };
 
 const reportsEls = {
   buttons: document.querySelectorAll('[data-report-kind]'),
   title: document.getElementById('managerReportTitle'),
   meta: document.getElementById('managerReportMeta'),
+  filterInput: document.getElementById('managerReportFilterInput'),
+  clearFiltersBtn: document.getElementById('managerReportClearFiltersBtn'),
   tableHead: document.getElementById('managerReportHead'),
   tableBody: document.getElementById('managerReportBody'),
+  pagination: document.getElementById('managerReportPagination'),
+  paginationMeta: document.getElementById('managerReportPaginationMeta'),
+  pageInfo: document.getElementById('managerReportPageInfo'),
   exportBtn: document.getElementById('managerReportExportBtn'),
 };
 
 let currentUsers = [];
 let currentSuppliers = [];
 let currentPurchaseOrders = [];
+let purchaseOrdersLoaded = false;
 let currentReport = null;
 let currentEditingUserId = null;
 let currentEditingSupplierId = null;
+let userModal = null;
+let supplierModal = null;
+const usersPageState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+const suppliersPageState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+const purchaseOrdersPageState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
+const reportsPageState = {
+  allItems: [],
+  filteredItems: [],
+  currentPage: 1,
+  pageSize: 15,
+};
 
 function setStatus(message, type = 'info') {
   if (!managerStatus) return;
@@ -75,7 +137,12 @@ function clearStatus() {
 }
 
 function formatMoney(amount) {
-  return `₪ ${Number(amount || 0).toFixed(2)}`;
+  return new Intl.NumberFormat('he-IL', {
+    style: 'currency',
+    currency: 'ILS',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(amount || 0));
 }
 
 function formatDateTime(value) {
@@ -83,9 +150,46 @@ function formatDateTime(value) {
   return new Date(value).toLocaleString('he-IL');
 }
 
+function getPurchaseOrderStatusLabel(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'new') return 'חדש';
+  if (normalized === 'in_progress') return 'בתהליך';
+  if (normalized === 'picking') return 'ליקוט';
+  if (normalized === 'done') return 'בוצע';
+  if (normalized === 'sent') return 'נשלח';
+  if (normalized === 'draft') return 'טיוטה';
+  return String(status || '--');
+}
+
 function formatDate(value) {
   if (!value) return '--';
   return new Date(value).toLocaleDateString('he-IL');
+}
+
+function formatMonthLabel(value) {
+  if (!value) return '--';
+  const parts = String(value).split('-');
+  if (parts.length === 2) {
+    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+    }
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+  }
+  return String(value);
+}
+
+function getInitials(name) {
+  const tokens = String(name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!tokens.length) return 'מ';
+  const initials = tokens.slice(0, 2).map((token) => token[0]).join('');
+  return initials.toUpperCase();
 }
 
 function escapeHtml(value) {
@@ -156,7 +260,7 @@ function getReportConfig(kind) {
       endpoint: `${API_BASE_URL}/api/admin/reports/purchase-orders?userId=${authUser.id}`,
       columns: ['ספק', 'סטטוס', 'נושא', 'נוצר על ידי', 'תאריך'],
       csvName: 'purchase-orders-report.csv',
-      renderRow: (item) => [item.supplierName || '', item.status || '', item.subject || '', item.createdBy || '', formatDateTime(item.createdAt)],
+      renderRow: (item) => [item.supplierName || '', getPurchaseOrderStatusLabel(item.status), item.subject || '', item.createdBy || '', formatDateTime(item.createdAt)],
     },
   };
 
@@ -200,12 +304,12 @@ function renderBars(container, items, valueKey, labelKey) {
     .map((item) => {
       const width = Math.max(6, (Number(item[valueKey] || 0) / maxValue) * 100);
       return `
-        <div class="mb-3">
-          <div class="d-flex justify-content-between gap-3 small mb-1">
-            <span class="fw-semibold">${escapeHtml(item[labelKey])}</span>
-            <span>${escapeHtml(item[valueKey])}</span>
+        <div class="manager-chart__item">
+          <div class="manager-chart__row">
+            <span>${escapeHtml(item[labelKey])}</span>
+            <span class="manager-chart__value">${escapeHtml(item[valueKey])}</span>
           </div>
-          <div class="progress" style="height: 12px;">
+          <div class="progress manager-progress">
             <div class="progress-bar bg-dark" role="progressbar" style="width: ${width}%"></div>
           </div>
         </div>
@@ -214,7 +318,103 @@ function renderBars(container, items, valueKey, labelKey) {
     .join('');
 }
 
+function getPageItems(items, pageState) {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageState.pageSize));
+  pageState.currentPage = Math.min(pageState.currentPage, totalPages);
+  const startIndex = (pageState.currentPage - 1) * pageState.pageSize;
+  return {
+    totalPages,
+    pageItems: items.slice(startIndex, startIndex + pageState.pageSize),
+  };
+}
+
+function renderPagination(container, pageState, metaEl, pageInfoEl, label) {
+  if (!container) return;
+
+  const total = pageState.filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageState.pageSize));
+  const currentPage = Math.min(pageState.currentPage, totalPages);
+  pageState.currentPage = currentPage;
+
+  if (!total) {
+    container.innerHTML = '';
+    if (metaEl) metaEl.textContent = 'אין נתונים תואמים לסינון';
+    if (pageInfoEl) pageInfoEl.textContent = '0';
+    return;
+  }
+
+  const from = (currentPage - 1) * pageState.pageSize + 1;
+  const to = Math.min(total, currentPage * pageState.pageSize);
+  if (metaEl) metaEl.textContent = `מציגים ${from}-${to} מתוך ${total} ${label}`;
+  if (pageInfoEl) pageInfoEl.textContent = `${currentPage}/${totalPages}`;
+
+  const buttons = [];
+  buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>קודם</button>`);
+
+  const visibleRange = 2;
+  const startPage = Math.max(1, currentPage - visibleRange);
+  const endPage = Math.min(totalPages, currentPage + visibleRange);
+
+  if (startPage > 1) {
+    buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="1">1</button>`);
+    if (startPage > 2) buttons.push('<span class="inventory-pagination__ellipsis">…</span>');
+  }
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    buttons.push(`<button type="button" class="btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}" data-page="${page}">${page}</button>`);
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) buttons.push('<span class="inventory-pagination__ellipsis">…</span>');
+    buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${totalPages}">${totalPages}</button>`);
+  }
+
+  buttons.push(`<button type="button" class="btn btn-outline-secondary btn-sm" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>הבא</button>`);
+  container.innerHTML = buttons.join('');
+}
+
+function bindPagination(container, pageState, renderFn) {
+  if (!container) return;
+  container.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-page]');
+    if (!target || target.disabled) return;
+    const page = Number(target.dataset.page);
+    if (!Number.isInteger(page) || page < 1) return;
+    pageState.currentPage = page;
+    renderFn();
+  });
+}
+
+function syncSidebarActiveState() {
+  const links = document.querySelectorAll('aside.manager-sidebar nav.manager-nav .manager-nav__link[href]');
+  const currentPath = window.location.pathname.split('/').pop() || 'manager.html';
+  links.forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const linkPath = href.split('/').pop();
+    link.classList.toggle('active', linkPath === currentPath);
+  });
+}
+
+function getUserSearchTerms() {
+  return String(usersEls.search?.value || '').trim().toLowerCase();
+}
+
+function getSupplierSearchTerms() {
+  return String(suppliersEls.search?.value || '').trim().toLowerCase();
+}
+
+function getPurchaseOrderSearchTerms() {
+  return String(suppliersEls.purchaseOrdersSearch?.value || '').trim().toLowerCase();
+}
+
+function getReportSearchTerms() {
+  return String(reportsEls.filterInput?.value || '').trim().toLowerCase();
+}
+
 function renderDashboard(data) {
+  const lowStockCount = Number(data.inventory?.lowStockCount || 0);
+  const openPurchaseOrders = Number(data.purchaseOrders?.openPurchaseOrders || 0);
+
   if (dashboardEls.totalUsers) dashboardEls.totalUsers.textContent = String(data.users?.totalUsers || 0);
   if (dashboardEls.totalOrders) dashboardEls.totalOrders.textContent = String(data.orders?.totalOrders || 0);
   if (dashboardEls.totalRevenue) dashboardEls.totalRevenue.textContent = formatMoney(data.orders?.totalRevenue || 0);
@@ -225,32 +425,46 @@ function renderDashboard(data) {
   if (dashboardEls.employees) dashboardEls.employees.textContent = String(data.users?.employeeCount || 0);
   if (dashboardEls.managers) dashboardEls.managers.textContent = String(data.users?.managerCount || 0);
 
+  if (managerNotificationCount) {
+    managerNotificationCount.textContent = String(Math.min(99, lowStockCount + openPurchaseOrders));
+  }
+
+  if (managerLastSync) {
+    managerLastSync.textContent = `מעודכן ${new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
   if (dashboardEls.recentOrders) {
     dashboardEls.recentOrders.innerHTML = (data.recentOrders || [])
       .map(
         (order) => `
-          <li class="border-bottom pb-2 mb-2">
-            <div class="d-flex justify-content-between gap-2">
-              <span class="fw-semibold">הזמנה #${escapeHtml(order.id)}</span>
-              <span>${formatMoney(order.totalAmount)}</span>
-            </div>
-            <div class="text-muted small">${escapeHtml(order.customerName || 'לקוח כללי')}</div>
-            <div class="text-muted small">${formatDateTime(order.createdAt)}</div>
-          </li>
+          <tr>
+            <td class="fw-semibold">#${escapeHtml(order.id)}</td>
+            <td>${escapeHtml(order.customerName || 'לקוח כללי')}</td>
+            <td>${formatDateTime(order.createdAt)}</td>
+            <td><span class="manager-badge">${formatMoney(order.totalAmount)}</span></td>
+          </tr>
         `
       )
-      .join('') || '<li class="text-muted">אין הזמנות אחרונות.</li>';
+      .join('') || '<tr><td colspan="4" class="text-muted">אין הזמנות אחרונות.</td></tr>';
   }
 
   if (dashboardEls.criticalStock) {
     dashboardEls.criticalStock.innerHTML = (data.criticalStock || [])
       .map(
         (item) => `
-          <li class="border-bottom pb-2 mb-2">
-            <div class="fw-semibold">${escapeHtml(item.productName)}</div>
-            <div class="text-muted small">
-              ${escapeHtml(item.category)} · מלאי ${escapeHtml(item.stock)} · מינימום ${escapeHtml(item.minStock)}
-              ${item.supplierName ? ` · ספק ${escapeHtml(item.supplierName)}` : ''}
+          <li>
+            <div class="d-flex align-items-start justify-content-between gap-3">
+              <div>
+                <div class="manager-list__title">${escapeHtml(item.productName)}</div>
+                <div class="manager-list__meta">
+                  ${escapeHtml(item.category)} · מלאי ${escapeHtml(item.stock)} · מינימום ${escapeHtml(item.minStock)}
+                </div>
+                <div class="manager-list__meta">
+                  ${item.location ? `מיקום: ${escapeHtml(item.location)} · ` : ''}
+                  ${item.supplierName ? `ספק: ${escapeHtml(item.supplierName)}` : 'ללא ספק משויך'}
+                </div>
+              </div>
+              <span class="manager-badge">${escapeHtml(item.stock)} / ${escapeHtml(item.minStock)}</span>
             </div>
           </li>
         `
@@ -262,15 +476,23 @@ function renderDashboard(data) {
 
   if (dashboardEls.monthlyRevenue) {
     const items = (data.monthlyRevenue || []).map((item) => ({
-      label: item.month,
+      label: formatMonthLabel(item.month),
       value: item.revenue,
     }));
     renderBars(
       dashboardEls.monthlyRevenue,
-      items.map((item) => ({ ...item, monthLabel: item.label })),
+      items,
       'value',
       'label'
     );
+  }
+
+  if (managerProfileName && authUser?.fullName) {
+    managerProfileName.textContent = authUser.fullName;
+  }
+
+  if (managerProfileInitials && authUser?.fullName) {
+    managerProfileInitials.textContent = getInitials(authUser.fullName);
   }
 }
 
@@ -278,6 +500,7 @@ function setUserFormState(user = null) {
   currentEditingUserId = user ? user.id : null;
   if (usersEls.form) usersEls.form.dataset.mode = user ? 'edit' : 'create';
   if (usersEls.saveBtn) usersEls.saveBtn.textContent = user ? 'שמירת שינויים' : 'הוספת משתמש';
+  if (usersEls.modalTitle) usersEls.modalTitle.textContent = user ? 'עריכת משתמש' : 'הוספת משתמש חדש';
   if (usersEls.fullName) usersEls.fullName.value = user?.fullName || '';
   if (usersEls.email) usersEls.email.value = user?.email || '';
   if (usersEls.password) usersEls.password.value = '';
@@ -296,35 +519,52 @@ function toggleCustomerTypeField() {
   }
 }
 
+function applyUsersFilters(resetPage = false) {
+  if (resetPage) usersPageState.currentPage = 1;
+
+  const searchTerm = getUserSearchTerms();
+  const role = String(usersEls.roleFilter?.value || '').trim();
+  usersPageState.filteredItems = usersPageState.allItems.filter((user) => {
+    const matchesSearch =
+      !searchTerm ||
+      String(user.fullName || '').toLowerCase().includes(searchTerm) ||
+      String(user.email || '').toLowerCase().includes(searchTerm) ||
+      String(user.role || '').toLowerCase().includes(searchTerm);
+    const matchesRole = !role || String(user.role || '') === role;
+    return matchesSearch && matchesRole;
+  });
+
+  renderUsersPage();
+}
+
 function renderUsers(users) {
   currentUsers = users;
+  usersPageState.allItems = [...users];
+  applyUsersFilters(true);
+}
+
+function renderUsersPage() {
   if (!usersEls.table) return;
 
-  usersEls.table.innerHTML = users
+  const { pageItems } = getPageItems(usersPageState.filteredItems, usersPageState);
+  if (!pageItems.length) {
+    usersEls.table.innerHTML = '<tr><td colspan="6" class="text-muted">אין משתמשים תואמים לסינון.</td></tr>';
+    renderPagination(usersEls.pagination, usersPageState, usersEls.paginationMeta, usersEls.pageInfo, 'משתמשים');
+    return;
+  }
+
+  usersEls.table.innerHTML = pageItems
     .map(
       (user) => `
         <tr>
-          <td><input class="form-control form-control-sm" data-user-field="fullName" data-user-id="${user.id}" value="${escapeHtml(user.fullName || '')}"></td>
-          <td><input class="form-control form-control-sm" data-user-field="email" data-user-id="${user.id}" value="${escapeHtml(user.email || '')}"></td>
-          <td>
-            <select class="form-select form-select-sm" data-user-field="role" data-user-id="${user.id}">
-              <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>לקוח</option>
-              <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>עובד</option>
-              <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>מנהל</option>
-            </select>
-          </td>
-          <td>
-            <select class="form-select form-select-sm" data-user-field="customerType" data-user-id="${user.id}" ${user.role !== 'customer' ? 'disabled' : ''}>
-              <option value="private" ${user.customerType === 'private' ? 'selected' : ''}>פרטי</option>
-              <option value="business" ${user.customerType === 'business' ? 'selected' : ''}>עסקי</option>
-              <option value="contractor" ${user.customerType === 'contractor' ? 'selected' : ''}>קבלן</option>
-            </select>
-          </td>
-          <td><input type="password" class="form-control form-control-sm" data-user-field="password" data-user-id="${user.id}" placeholder="השאר ריק אם לא משנים"></td>
+          <td class="fw-semibold">${escapeHtml(user.fullName || '')}</td>
+          <td>${escapeHtml(user.email || '')}</td>
+          <td><span class="manager-badge">${user.role === 'manager' ? 'מנהל' : user.role === 'employee' ? 'עובד' : 'לקוח'}</span></td>
+          <td>${user.role === 'customer' ? escapeHtml(user.customerType || 'פרטי') : '--'}</td>
+          <td><span class="manager-badge">פעיל</span></td>
           <td>
             <div class="d-flex gap-2 flex-wrap">
-              <button type="button" class="btn btn-dark btn-sm" data-user-save="${user.id}">שמור</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" data-user-edit="${user.id}">טען לעריכה</button>
+              <button type="button" class="btn btn-dark btn-sm" data-user-edit="${user.id}">ערוך</button>
             </div>
           </td>
         </tr>
@@ -332,16 +572,24 @@ function renderUsers(users) {
     )
     .join('');
 
-  document.querySelectorAll('[data-user-save]').forEach((button) => {
-    button.addEventListener('click', () => updateUser(button.dataset.userSave));
-  });
-
   document.querySelectorAll('[data-user-edit]').forEach((button) => {
     button.addEventListener('click', () => {
       const user = currentUsers.find((item) => String(item.id) === String(button.dataset.userEdit));
-      if (user) setUserFormState(user);
+      if (user) {
+        setUserFormState(user);
+        getUserModal()?.show();
+      }
     });
   });
+
+  renderPagination(usersEls.pagination, usersPageState, usersEls.paginationMeta, usersEls.pageInfo, 'משתמשים');
+}
+
+function getUserModal() {
+  if (!userModal && usersEls.modalEl) {
+    userModal = new Modal(usersEls.modalEl);
+  }
+  return userModal;
 }
 
 function getUserFieldValue(userId, field) {
@@ -399,6 +647,7 @@ async function saveUser(event) {
     }
 
     setUserFormState(null);
+    getUserModal()?.hide();
     await refreshUsers();
   } catch (_err) {
     setStatus('לא ניתן לשמור משתמש כרגע.', 'danger');
@@ -430,8 +679,39 @@ async function updateUser(userId) {
 
 function renderSuppliers(suppliers) {
   currentSuppliers = suppliers;
+  suppliersPageState.allItems = [...suppliers];
+  applySuppliersFilters(true);
+}
+
+function applySuppliersFilters(resetPage = false) {
+  if (resetPage) suppliersPageState.currentPage = 1;
+
+  const searchTerm = getSupplierSearchTerms();
+  const category = String(suppliersEls.categoryFilter?.value || '').trim();
+  suppliersPageState.filteredItems = suppliersPageState.allItems.filter((supplier) => {
+    const matchesSearch =
+      !searchTerm ||
+      String(supplier.supplierName || '').toLowerCase().includes(searchTerm) ||
+      String(supplier.supplierCode || '').toLowerCase().includes(searchTerm) ||
+      String(supplier.email || '').toLowerCase().includes(searchTerm) ||
+      String(supplier.phone || '').toLowerCase().includes(searchTerm) ||
+      String(supplier.productCategory || '').toLowerCase().includes(searchTerm);
+    const matchesCategory = !category || String(supplier.productCategory || '') === category;
+    return matchesSearch && matchesCategory;
+  });
+  renderSuppliersPage();
+}
+
+function renderSuppliersPage() {
   if (suppliersEls.table) {
-    suppliersEls.table.innerHTML = suppliers
+    const { pageItems } = getPageItems(suppliersPageState.filteredItems, suppliersPageState);
+    if (!pageItems.length) {
+      suppliersEls.table.innerHTML = '<tr><td colspan="7" class="text-muted">אין ספקים תואמים לסינון.</td></tr>';
+      renderPagination(suppliersEls.pagination, suppliersPageState, suppliersEls.paginationMeta, suppliersEls.pageInfo, 'ספקים');
+      return;
+    }
+
+    suppliersEls.table.innerHTML = pageItems
       .map(
         (supplier) => `
           <tr>
@@ -443,9 +723,9 @@ function renderSuppliers(suppliers) {
             <td><span class="badge bg-warning text-dark">${supplier.lowStockCount}</span></td>
             <td>
               <div class="d-flex gap-2 flex-wrap">
-                <button type="button" class="btn btn-dark btn-sm" data-supplier-edit="${supplier.supplierId}">ערוך</button>
-                <a class="btn btn-outline-primary btn-sm" href="${supplier.mailtoHref}">פתח דוא"ל</a>
+                <a class="btn btn-outline-dark btn-sm" href="${supplier.mailtoHref}">פתח דוא"ל</a>
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-supplier-order="${supplier.supplierId}">שמור הזמנה</button>
+                <button type="button" class="btn btn-dark btn-sm" data-supplier-edit="${supplier.supplierId}">ערוך</button>
               </div>
             </td>
           </tr>
@@ -454,8 +734,10 @@ function renderSuppliers(suppliers) {
       .join('');
   }
 
+  renderPagination(suppliersEls.pagination, suppliersPageState, suppliersEls.paginationMeta, suppliersEls.pageInfo, 'ספקים');
+
   if (suppliersEls.lowStock) {
-    const lowStockItems = suppliers.flatMap((supplier) =>
+    const lowStockItems = currentSuppliers.flatMap((supplier) =>
       supplier.lowStockProducts.map((item) => ({
         ...item,
         supplierName: supplier.supplierName,
@@ -482,28 +764,17 @@ function renderSuppliers(suppliers) {
       : '<li class="text-muted">אין מוצרים במלאי נמוך.</li>';
   }
 
-  if (suppliersEls.purchaseOrders) {
-    suppliersEls.purchaseOrders.innerHTML = currentPurchaseOrders.length
-      ? currentPurchaseOrders
-          .map(
-            (order) => `
-              <tr>
-                <td>${escapeHtml(order.supplierName)}</td>
-                <td>${escapeHtml(order.status)}</td>
-                <td>${escapeHtml(order.subject)}</td>
-                <td>${escapeHtml(order.createdBy)}</td>
-                <td>${formatDateTime(order.createdAt)}</td>
-              </tr>
-            `
-          )
-          .join('')
-      : '<tr><td colspan="5" class="text-muted">אין עדיין הזמנות רכש.</td></tr>';
+  if (suppliersEls.purchaseOrders && purchaseOrdersLoaded) {
+    renderPurchaseOrdersPage();
   }
 
   document.querySelectorAll('[data-supplier-edit]').forEach((button) => {
     button.addEventListener('click', () => {
       const supplier = currentSuppliers.find((item) => String(item.supplierId) === String(button.dataset.supplierEdit));
-      if (supplier) setSupplierFormState(supplier);
+      if (supplier) {
+        setSupplierFormState(supplier);
+        getSupplierModal()?.show();
+      }
     });
   });
 
@@ -512,13 +783,81 @@ function renderSuppliers(suppliers) {
   });
 }
 
+function applyPurchaseOrdersFilters(resetPage = false) {
+  if (resetPage) purchaseOrdersPageState.currentPage = 1;
+
+  const searchTerm = getPurchaseOrderSearchTerms();
+  purchaseOrdersPageState.filteredItems = purchaseOrdersPageState.allItems.filter((order) => {
+    if (!searchTerm) return true;
+    return [
+      order.supplierName,
+      order.status,
+      order.subject,
+      order.createdBy,
+      order.createdAt ? formatDateTime(order.createdAt) : '',
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+
+  renderPurchaseOrdersPage();
+}
+
+function renderPurchaseOrdersPage() {
+  if (!suppliersEls.purchaseOrders) return;
+
+  const { pageItems } = getPageItems(purchaseOrdersPageState.filteredItems, purchaseOrdersPageState);
+  if (!pageItems.length) {
+    suppliersEls.purchaseOrders.innerHTML = '<tr><td colspan="5" class="text-muted">אין עדיין הזמנות רכש.</td></tr>';
+    renderPagination(
+      suppliersEls.purchaseOrdersPagination,
+      purchaseOrdersPageState,
+      suppliersEls.purchaseOrdersPaginationMeta,
+      suppliersEls.purchaseOrdersPageInfo,
+      'הזמנות'
+    );
+    return;
+  }
+
+  suppliersEls.purchaseOrders.innerHTML = pageItems
+    .map(
+      (order) => `
+        <tr>
+          <td>${escapeHtml(order.supplierName)}</td>
+          <td><span class="manager-badge">${escapeHtml(getPurchaseOrderStatusLabel(order.status))}</span></td>
+          <td>${escapeHtml(order.subject)}</td>
+          <td>${escapeHtml(order.createdBy)}</td>
+          <td>${formatDateTime(order.createdAt)}</td>
+        </tr>
+      `
+    )
+    .join('');
+
+  renderPagination(
+    suppliersEls.purchaseOrdersPagination,
+    purchaseOrdersPageState,
+    suppliersEls.purchaseOrdersPaginationMeta,
+    suppliersEls.purchaseOrdersPageInfo,
+    'הזמנות'
+  );
+}
+
 function setSupplierFormState(supplier = null) {
   currentEditingSupplierId = supplier ? supplier.supplierId : null;
   if (suppliersEls.saveBtn) suppliersEls.saveBtn.textContent = supplier ? 'שמירת ספק' : 'הוספת ספק';
+  if (suppliersEls.modalTitle) suppliersEls.modalTitle.textContent = supplier ? 'עריכת ספק' : 'הוספת ספק חדש';
   if (suppliersEls.name) suppliersEls.name.value = supplier?.supplierName || '';
   if (suppliersEls.email) suppliersEls.email.value = supplier?.email || '';
   if (suppliersEls.phone) suppliersEls.phone.value = supplier?.phone || '';
   if (suppliersEls.notes) suppliersEls.notes.value = supplier?.notes || '';
+}
+
+function getSupplierModal() {
+  if (!supplierModal && suppliersEls.modalEl) {
+    supplierModal = new Modal(suppliersEls.modalEl);
+  }
+  return supplierModal;
 }
 
 async function saveSupplier(event) {
@@ -547,6 +886,7 @@ async function saveSupplier(event) {
 
     setStatus('הספק נשמר בהצלחה.', 'success');
     setSupplierFormState(null);
+    getSupplierModal()?.hide();
     await refreshSuppliers();
   } catch (_err) {
     setStatus('לא ניתן לשמור ספק כרגע.', 'danger');
@@ -560,7 +900,9 @@ async function refreshSuppliers() {
 
 async function loadPurchaseOrders() {
   currentPurchaseOrders = await fetchJson(`${API_BASE_URL}/api/admin/purchase-orders?userId=${authUser.id}`);
-  renderSuppliers(currentSuppliers);
+  purchaseOrdersLoaded = true;
+  purchaseOrdersPageState.allItems = [...currentPurchaseOrders];
+  applyPurchaseOrdersFilters(true);
 }
 
 async function createPurchaseOrder(supplierId) {
@@ -574,7 +916,7 @@ async function createPurchaseOrder(supplierId) {
       body: JSON.stringify({
         userId: authUser.id,
         supplierId: supplier.supplierId,
-        status: 'sent',
+        status: 'new',
       }),
     });
 
@@ -589,7 +931,10 @@ async function createPurchaseOrder(supplierId) {
       },
       ...currentPurchaseOrders,
     ];
+    purchaseOrdersLoaded = true;
+    purchaseOrdersPageState.allItems = [...currentPurchaseOrders];
     renderSuppliers(currentSuppliers);
+    applyPurchaseOrdersFilters(true);
     setStatus(`הזמנת רכש נוצרה עבור ${supplier.supplierName}.`, 'success');
     window.location.href = supplier.mailtoHref;
   } catch (_err) {
@@ -611,14 +956,8 @@ function renderReport(data, config) {
     </tr>
   `;
 
-  reportsEls.tableBody.innerHTML = data.length
-    ? data
-        .map((item) => {
-          const row = config.renderRow(item);
-          return `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`;
-        })
-        .join('')
-    : `<tr><td colspan="${config.columns.length}" class="text-muted">אין נתונים להצגה.</td></tr>`;
+  reportsPageState.allItems = [...data];
+  applyReportFilters(true);
 }
 
 async function loadReport(kind) {
@@ -629,6 +968,38 @@ async function loadReport(kind) {
   if (reportsEls.title) reportsEls.title.textContent = config.title;
   if (reportsEls.meta) reportsEls.meta.textContent = `ייצוא מהיר ל-${config.csvName}`;
   renderReport(data, config);
+}
+
+function applyReportFilters(resetPage = false) {
+  if (resetPage) reportsPageState.currentPage = 1;
+
+  const searchTerm = getReportSearchTerms();
+  reportsPageState.filteredItems = reportsPageState.allItems.filter((item) => {
+    if (!searchTerm) return true;
+    return currentReport?.renderRow(item).some((cell) => String(cell || '').toLowerCase().includes(searchTerm));
+  });
+
+  renderReportPage();
+}
+
+function renderReportPage() {
+  if (!reportsEls.tableBody || !currentReport) return;
+
+  const { pageItems } = getPageItems(reportsPageState.filteredItems, reportsPageState);
+  if (!pageItems.length) {
+    reportsEls.tableBody.innerHTML = `<tr><td colspan="${currentReport.columns.length}" class="text-muted">אין נתונים תואמים לסינון.</td></tr>`;
+    renderPagination(reportsEls.pagination, reportsPageState, reportsEls.paginationMeta, reportsEls.pageInfo, 'שורות');
+    return;
+  }
+
+  reportsEls.tableBody.innerHTML = pageItems
+    .map((item) => {
+      const row = currentReport.renderRow(item);
+      return `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`;
+    })
+    .join('');
+
+  renderPagination(reportsEls.pagination, reportsPageState, reportsEls.paginationMeta, reportsEls.pageInfo, 'שורות');
 }
 
 function bindReportButtons() {
@@ -657,11 +1028,81 @@ function bindReportButtons() {
 }
 
 function bindEvents() {
+  if (usersEls.addBtn) {
+    usersEls.addBtn.addEventListener('click', () => {
+      setUserFormState(null);
+      getUserModal()?.show();
+    });
+  }
   if (usersEls.form) usersEls.form.addEventListener('submit', saveUser);
   if (usersEls.role) usersEls.role.addEventListener('change', toggleCustomerTypeField);
   if (usersEls.customerType) usersEls.customerType.addEventListener('change', toggleCustomerTypeField);
+  if (usersEls.modalEl) {
+    usersEls.modalEl.addEventListener('hidden.bs.modal', () => {
+      setUserFormState(null);
+    });
+  }
+  if (usersEls.search) usersEls.search.addEventListener('input', () => applyUsersFilters(true));
+  if (usersEls.roleFilter) usersEls.roleFilter.addEventListener('change', () => applyUsersFilters(true));
+  if (usersEls.clearFiltersBtn) {
+    usersEls.clearFiltersBtn.addEventListener('click', () => {
+      if (usersEls.search) usersEls.search.value = '';
+      if (usersEls.roleFilter) usersEls.roleFilter.value = '';
+      applyUsersFilters(true);
+    });
+  }
+  bindPagination(usersEls.pagination, usersPageState, renderUsersPage);
 
+  if (suppliersEls.addBtn) {
+    suppliersEls.addBtn.addEventListener('click', () => {
+      setSupplierFormState(null);
+      getSupplierModal()?.show();
+    });
+  }
   if (suppliersEls.form) suppliersEls.form.addEventListener('submit', saveSupplier);
+  if (suppliersEls.modalEl) {
+    suppliersEls.modalEl.addEventListener('hidden.bs.modal', () => {
+      setSupplierFormState(null);
+    });
+  }
+  if (suppliersEls.search) suppliersEls.search.addEventListener('input', () => applySuppliersFilters(true));
+  if (suppliersEls.categoryFilter) suppliersEls.categoryFilter.addEventListener('change', () => applySuppliersFilters(true));
+  if (suppliersEls.clearFiltersBtn) {
+    suppliersEls.clearFiltersBtn.addEventListener('click', () => {
+      if (suppliersEls.search) suppliersEls.search.value = '';
+      if (suppliersEls.categoryFilter) suppliersEls.categoryFilter.value = '';
+      applySuppliersFilters(true);
+    });
+  }
+  bindPagination(suppliersEls.pagination, suppliersPageState, renderSuppliersPage);
+
+  if (suppliersEls.purchaseOrdersSearch) {
+    suppliersEls.purchaseOrdersSearch.addEventListener('input', () => applyPurchaseOrdersFilters(true));
+  }
+  if (suppliersEls.purchaseOrdersClearFiltersBtn) {
+    suppliersEls.purchaseOrdersClearFiltersBtn.addEventListener('click', () => {
+      if (suppliersEls.purchaseOrdersSearch) suppliersEls.purchaseOrdersSearch.value = '';
+      applyPurchaseOrdersFilters(true);
+    });
+  }
+  bindPagination(suppliersEls.purchaseOrdersPagination, purchaseOrdersPageState, renderPurchaseOrdersPage);
+
+  if (reportsEls.filterInput) reportsEls.filterInput.addEventListener('input', () => applyReportFilters(true));
+  if (reportsEls.clearFiltersBtn) {
+    reportsEls.clearFiltersBtn.addEventListener('click', () => {
+      if (reportsEls.filterInput) reportsEls.filterInput.value = '';
+      applyReportFilters(true);
+    });
+  }
+  bindPagination(reportsEls.pagination, reportsPageState, renderReportPage);
+
+  if (managerLogoutLink) {
+    managerLogoutLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      localStorage.removeItem('authUser');
+      window.location.href = 'login.html';
+    });
+  }
 
   bindReportButtons();
 }
@@ -692,8 +1133,18 @@ function init() {
     managerUserLine.textContent = `מחובר כ-${authUser.fullName} · הרשאת מנהל מלאה`;
   }
 
+  if (managerProfileName) {
+    managerProfileName.textContent = authUser.fullName || 'מנהל מערכת';
+  }
+
+  if (managerProfileInitials) {
+    managerProfileInitials.textContent = getInitials(authUser.fullName);
+  }
+
+  syncSidebarActiveState();
+
   if (!managerStatus) return;
-  setStatus('ברוך הבא לאזור הניהולי. כאן אפשר לנהל ספקים, משתמשים, מלאי ודו"חות.', 'info');
+  setStatus('ברוכים הבאים ללוח הבקרה. כאן אפשר לעקוב אחרי ההזמנות, המלאי, הספקים והדו"חות במקום אחד.', 'info');
   bindEvents();
 
   const initTasks = [];

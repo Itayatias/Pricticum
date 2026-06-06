@@ -4,182 +4,266 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4f7fb" />
   <title>מוצרים ומלאי - נבלט בע״מ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 
-<body class="font-sans text-gray-800">
-  <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
-    <div class="container-fluid px-0">
-      <a class="navbar-brand" href="../index.html">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;"></span>
-        </span>
-      </a>
-      <div class="mx-auto d-lg-block d-none">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="manager.html">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-suppliers.html">ספקים - הזמנות רכש</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-users.html">ניהול משתמשים</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="manager-inventory.html">מוצרים ומלאי</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-reports.html">דו״חות ניהוליים</a></li>
-        </ul>
-      </div>
-      <div class="d-flex align-items-center gap-4">
-        <a href="products.html#cart-section" class="d-flex align-items-center gap-2 fw-bold text-decoration-none text-dark header-cart-link">
-          <span><i class="bi bi-cart3"></i></span>
-          <span>סל לקוח: <span class="header-cart-count">0</span></span>
-        </a>
-        <a class="" data-bs-toggle="offcanvas" href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </nav>
+<body class="manager-page">
+  <div class="manager-layout">
+    <div class="manager-content">
+      <header class="manager-topbar">
+        <div class="manager-topbar__title-wrap">
+          <div class="manager-topbar__eyebrow">מוצרים ומלאי</div>
+          <h1 class="manager-topbar__title mb-0">ניהול מוצרים, עדכונים ותנועות</h1>
+        </div>
 
-  <main>
-    <section class="py-lg-8 py-5">
-      <div class="container">
-        <div class="bg-light border rounded-4 p-4 p-lg-5">
-          <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center mb-4">
-            <div>
-              <p class="text-uppercase text-xs fw-semibold text-muted mb-2">מוצרים ומלאי</p>
-              <h1 class="display-6 mb-2">ניהול מלאי והוספת מוצרים</h1>
-              <p id="staffUserLine" class="text-muted mb-0">טוען פרטי משתמש...</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-              <a href="manager.html" class="btn btn-outline-dark">לדשבורד</a>
-              <a href="manager-suppliers.html" class="btn btn-outline-secondary">לספקים</a>
-            </div>
-          </div>
-
-          <div id="staffStatus" class="alert alert-info d-none mb-4" role="alert"></div>
-
-          <div class="row g-4">
-            <div class="col-lg-8">
-              <div class="bg-white border rounded-4 p-4 h-100 mb-4">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">מלאי החנות</h2>
-                  <span class="text-muted small">עדכון כמויות ומאפייני מוצר</span>
-                </div>
-                <div class="table-responsive">
-                  <table class="table align-middle inventory-table mb-0">
-                    <thead>
-                      <tr>
-                        <th>מוצר</th>
-                        <th>קטגוריה</th>
-                        <th>כמות</th>
-                        <th>יעד מינימום</th>
-                        <th>סטטוס</th>
-                        <th>פעולות</th>
-                      </tr>
-                    </thead>
-                    <tbody id="inventoryTableBody"></tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">תנועות מלאי אחרונות</h2>
-                </div>
-                <ul id="inventoryMovementsList" class="list-unstyled mb-0"></ul>
-              </div>
-            </div>
-
-            <div class="col-lg-4">
-              <div class="bg-white border rounded-4 p-4 h-100">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <h2 class="h5 mb-0">הוספת / עריכת מוצר</h2>
-                </div>
-                <form id="inventoryForm" class="row g-3">
-                  <div class="col-12">
-                    <label class="form-label">קוד מוצר</label>
-                    <input id="inventoryProductId" name="productId" class="form-control" placeholder="לדוגמה: paint-roller" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">שם המוצר</label>
-                    <input id="inventoryProductName" name="productName" class="form-control" placeholder="שם המוצר" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">קטגוריה</label>
-                    <select id="inventoryCategory" name="category" class="form-select" required>
-                      <option value="חומרי בנייה">חומרי בנייה</option>
-                      <option value="צבע">צבע</option>
-                      <option value="אינסטלציה">אינסטלציה</option>
-                      <option value="חשמל">חשמל</option>
-                      <option value="כלי עבודה">כלי עבודה</option>
-                      <option value="גינון">גינון</option>
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">ספק</label>
-                    <select id="inventorySupplierId" name="supplierId" class="form-select" required>
-                      <option value="">טוען ספקים...</option>
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">מחיר</label>
-                    <input id="inventoryPrice" name="price" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">כמות במלאי</label>
-                    <input id="inventoryStock" name="stock" type="number" min="0" class="form-control" value="0" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">מינימום במלאי</label>
-                    <input id="inventoryMinStock" name="minStock" type="number" min="0" class="form-control" value="5" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">מיקום</label>
-                    <input id="inventoryLocation" name="location" class="form-control" value="מחסן ראשי" required>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">קישור תמונה</label>
-                    <input id="inventoryImageUrl" name="imageUrl" type="url" class="form-control" placeholder="https://example.com/image.jpg">
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label">העלאת תמונה</label>
-                    <input id="inventoryImageFile" name="imageFile" type="file" accept="image/*" class="form-control">
-                  </div>
-                  <div class="col-12">
-                    <div class="bg-light border rounded-3 p-3 text-center">
-                      <img id="inventoryImagePreview" alt="תצוגה מקדימה של המוצר" class="img-fluid rounded-3 d-none" />
-                      <div id="inventoryImagePreviewEmpty" class="text-muted small">יש לבחור קישור או קובץ תמונה כדי להציג תצוגה מקדימה.</div>
-                    </div>
-                  </div>
-                  <div class="col-12 d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-primary" id="inventorySaveBtn">שמירת מוצר</button>
-                    <button type="button" class="btn btn-outline-secondary" id="inventoryResetBtn">ניקוי טופס</button>
-                  </div>
-                </form>
-              </div>
+        <div class="manager-topbar__actions">
+          <div class="manager-profile" aria-label="פרטי משתמש">
+            <div class="manager-profile__avatar" id="managerProfileInitials">מ</div>
+            <div class="manager-profile__meta">
+              <span>מחובר כמנהל</span>
+              <strong id="managerProfileName">מנהל מערכת</strong>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </header>
 
-  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
-    <div class="offcanvas-header px-4">
-      <a class="navbar-brand" href="../index.html">
-        <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
-          <span style="letter-spacing: .12rem;"><img src="../assets/images/logo.png" alt="לוגו נבלט" class="img-fluid" style="max-height: 50px;"></span>
+      <main class="manager-main">
+        <section class="manager-hero">
+          <div class="manager-hero__copy">
+            <p class="manager-kicker mb-2">מוצרים ומלאי</p>
+            <h2 class="manager-hero__title mb-3">טבלת מוצרים עם עריכה מהירה וסינון חכם</h2>
+            <p id="staffUserLine" class="manager-hero__text mb-3">טוען פרטי משתמש...</p>
+            <div class="manager-breadcrumb">
+              <a href="manager.html">דשבורד</a>
+              <span>/</span>
+              <a href="manager-inventory.html">מוצרים ומלאי</a>
+            </div>
+          </div>
+
+          <a class="manager-release" href="manager-suppliers.html">
+            <i class="bi bi-box-seam-fill"></i>
+            <span>ניהול מוצרים</span>
+            <strong>מלאי חי</strong>
+          </a>
+        </section>
+
+        <div id="staffStatus" class="manager-alert d-none mb-4" role="alert"></div>
+
+        <section id="inventoryToolbar" class="inventory-toolbar manager-panel">
+          <div class="inventory-toolbar__actions">
+            <button id="inventoryAddProductBtn" type="button" class="btn btn-primary">
+              <i class="bi bi-plus-lg"></i>
+              <span>הוספת מוצר חדש</span>
+            </button>
+            <button id="inventoryMovementsBtn" type="button" class="btn btn-outline-dark">
+              <i class="bi bi-clock-history"></i>
+              <span>תנועות מלאי</span>
+            </button>
+            <div id="inventoryPageInfo" class="inventory-toolbar__info">טוען מוצרים...</div>
+          </div>
+
+          <div class="inventory-toolbar__filters">
+            <div class="inventory-filter">
+              <label class="form-label mb-1">חיפוש</label>
+              <input id="inventorySearchInput" type="search" class="form-control" placeholder="חיפוש לפי שם מוצר">
+            </div>
+            <div class="inventory-filter">
+              <label class="form-label mb-1">קטגוריה</label>
+              <select id="inventoryCategoryFilter" class="form-select">
+                <option value="">כל הקטגוריות</option>
+              </select>
+            </div>
+            <div class="inventory-filter inventory-filter--actions">
+              <label class="form-label mb-1 invisible">ניקוי</label>
+              <button id="inventoryClearFiltersBtn" type="button" class="btn btn-outline-secondary w-100">ניקוי סינון</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="manager-panel manager-panel--orders">
+          <div class="manager-panel__header">
+            <div>
+              <h3 class="manager-panel__title">טבלת מוצרים</h3>
+              <p class="manager-panel__subtitle mb-0">כל פעם מוצגים עד 15 מוצרים, עם פעולות מהירות לכל שורה.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle inventory-table mb-0">
+              <thead>
+                <tr>
+                  <th>מוצר</th>
+                  <th>קטגוריה</th>
+                  <th>מחיר</th>
+                  <th>מלאי</th>
+                  <th>מינימום</th>
+                  <th>סטטוס</th>
+                  <th>פעולות</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTableBody"></tbody>
+            </table>
+          </div>
+
+          <div class="inventory-pagination">
+            <div id="inventoryPaginationMeta" class="inventory-pagination__meta">--</div>
+            <div id="inventoryPagination" class="inventory-pagination__controls"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <aside class="manager-sidebar">
+      <a class="manager-brand" href="../index.html">
+        <img src="../assets/images/logo.png" alt="לוגו נבלט" class="manager-brand__logo" />
+        <span class="manager-brand__text">
+          <strong>Nevelat</strong>
+          <small>AdminHub</small>
         </span>
       </a>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+
+      <nav class="manager-nav" aria-label="ניווט מנהל">
+        <a class="manager-nav__link" href="manager.html">
+          <i class="bi bi-grid-1x2-fill"></i>
+          <span>דשבורד</span>
+        </a>
+        <a class="manager-nav__link" href="manager-suppliers.html">
+          <i class="bi bi-truck"></i>
+          <span>ספקים והזמנות רכש</span>
+        </a>
+        <a class="manager-nav__link" href="manager-users.html">
+          <i class="bi bi-people"></i>
+          <span>ניהול משתמשים</span>
+        </a>
+        <a class="manager-nav__link active" href="manager-inventory.html">
+          <i class="bi bi-box-seam"></i>
+          <span>מוצרים ומלאי</span>
+        </a>
+        <a class="manager-nav__link" href="manager-reports.html">
+          <i class="bi bi-bar-chart-line-fill"></i>
+          <span>דו״חות ניהוליים</span>
+        </a>
+      </nav>
+
+      <div class="manager-sidebar__footer">
+        <a class="manager-nav__link manager-nav__link--muted" href="manager-users.html">
+          <i class="bi bi-person-vcard"></i>
+          <span>ניהול משתמשים</span>
+        </a>
+        <a class="manager-nav__link manager-nav__link--danger" href="login.html" data-manager-logout>
+          <i class="bi bi-box-arrow-right"></i>
+          <span>התנתקות</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal fade" id="inventoryProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content manager-modal">
+        <div class="modal-header">
+          <div>
+            <h5 id="inventoryProductModalTitle" class="modal-title mb-1">הוספת מוצר חדש</h5>
+            <p class="text-muted small mb-0">ממלאים את הפרטים ושומרים את המוצר ישירות למערכת.</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="סגירה"></button>
+        </div>
+        <div class="modal-body">
+          <form id="inventoryForm" class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">קוד מוצר</label>
+              <input id="inventoryProductId" name="productId" class="form-control" placeholder="לדוגמה: paint-roller" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">שם המוצר</label>
+              <input id="inventoryProductName" name="productName" class="form-control" placeholder="שם המוצר" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">קטגוריה</label>
+              <select id="inventoryCategory" name="category" class="form-select" required>
+                <option value="חומרי בנייה">חומרי בנייה</option>
+                <option value="צבע">צבע</option>
+                <option value="אינסטלציה">אינסטלציה</option>
+                <option value="חשמל">חשמל</option>
+                <option value="כלי עבודה">כלי עבודה</option>
+                <option value="גינון">גינון</option>
+              </select>
+            </div>
+              <div class="col-md-4">
+              <label class="form-label">ספק</label>
+              <select id="inventorySupplierId" name="supplierId" class="form-select">
+                <option value="">טוען ספקים...</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">מחיר</label>
+              <input id="inventoryPrice" name="price" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">מיקום</label>
+              <input id="inventoryLocation" name="location" class="form-control" value="מחסן ראשי" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">כמות במלאי</label>
+              <input id="inventoryStock" name="stock" type="number" min="0" class="form-control" value="0" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">מינימום במלאי</label>
+              <input id="inventoryMinStock" name="minStock" type="number" min="0" class="form-control" value="5" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">קישור תמונה</label>
+              <input id="inventoryImageUrl" name="imageUrl" type="url" class="form-control" placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="col-12">
+              <label class="form-label">העלאת תמונה</label>
+              <input id="inventoryImageFile" name="imageFile" type="file" accept="image/*" class="form-control">
+            </div>
+            <div class="col-12">
+              <div class="inventory-preview">
+                <img id="inventoryImagePreview" alt="תצוגה מקדימה של המוצר" class="img-fluid rounded-3 d-none" />
+                <div id="inventoryImagePreviewEmpty" class="text-muted small">יש לבחור קישור או קובץ תמונה כדי להציג תצוגה מקדימה.</div>
+              </div>
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary" id="inventorySaveBtn">שמירת מוצר</button>
+              <button type="button" class="btn btn-outline-secondary" id="inventoryResetBtn">ניקוי טופס</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="offcanvas-body">
-      <div class="navbar-custom">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="manager.html">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-suppliers.html">ספקים - הזמנות רכש</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-users.html">ניהול משתמשים</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="manager-inventory.html">מוצרים ומלאי</a></li>
-          <li class="nav-item"><a class="nav-link" href="manager-reports.html">דו״חות ניהוליים</a></li>
-        </ul>
+  </div>
+
+  <div class="modal fade" id="inventoryMovementsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content manager-modal">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-1">תנועות מלאי</h5>
+            <p class="text-muted small mb-0">מעקב אחר עדכונים, הוספות והפחתות שבוצעו במערכת.</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="סגירה"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table align-middle manager-table mb-0">
+              <thead>
+                <tr>
+                  <th>מוצר</th>
+                  <th>שינוי</th>
+                  <th>סיבה</th>
+                  <th>תאריך</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryMovementsBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
