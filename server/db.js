@@ -49,10 +49,16 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       total_amount REAL NOT NULL,
+      status TEXT NOT NULL DEFAULT 'new',
+      staff_notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(user_id) REFERENCES users(id)
     )
   `);
+  db.run('ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT \'new\'', () => {});
+  db.run('ALTER TABLE orders ADD COLUMN staff_notes TEXT NOT NULL DEFAULT \'\'', () => {});
+  db.run('ALTER TABLE orders ADD COLUMN updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP', () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS order_items (

@@ -69,6 +69,18 @@ const customerOrdersSearchInput = document.getElementById('staffCustomerOrdersSe
 const customerOrdersPagination = document.getElementById('staffCustomerOrdersPagination');
 const customerOrdersPaginationMeta = document.getElementById('staffCustomerOrdersPaginationMeta');
 const customerOrdersPageInfo = document.getElementById('staffCustomerOrdersPageInfo');
+const customerOrdersInProgressTableBody = document.getElementById('staffCustomerOrdersInProgressTable');
+const customerOrdersInProgressPagination = document.getElementById('staffCustomerOrdersInProgressPagination');
+const customerOrdersInProgressPaginationMeta = document.getElementById('staffCustomerOrdersInProgressPaginationMeta');
+const customerOrdersInProgressPageInfo = document.getElementById('staffCustomerOrdersInProgressPageInfo');
+const customerOrdersSentTableBody = document.getElementById('staffCustomerOrdersSentTable');
+const customerOrdersSentPagination = document.getElementById('staffCustomerOrdersSentPagination');
+const customerOrdersSentPaginationMeta = document.getElementById('staffCustomerOrdersSentPaginationMeta');
+const customerOrdersSentPageInfo = document.getElementById('staffCustomerOrdersSentPageInfo');
+const customerOrdersDoneTableBody = document.getElementById('staffCustomerOrdersDoneTable');
+const customerOrdersDonePagination = document.getElementById('staffCustomerOrdersDonePagination');
+const customerOrdersDonePaginationMeta = document.getElementById('staffCustomerOrdersDonePaginationMeta');
+const customerOrdersDonePageInfo = document.getElementById('staffCustomerOrdersDonePageInfo');
 const staffLogoutLink = document.querySelector('[data-staff-logout]');
 
 let currentEditProductId = null;
@@ -91,6 +103,12 @@ let customerOrdersState = {
   filteredItems: [],
   currentPage: 1,
   pageSize: 15,
+};
+const customerOrdersPageStates = {
+  new: { currentPage: 1, pageSize: 15, allItems: [], filteredItems: [] },
+  in_progress: { currentPage: 1, pageSize: 15, allItems: [], filteredItems: [] },
+  sent: { currentPage: 1, pageSize: 15, allItems: [], filteredItems: [] },
+  done: { currentPage: 1, pageSize: 15, allItems: [], filteredItems: [] },
 };
 const inventoryPageState = {
   allItems: [],
@@ -247,6 +265,30 @@ function isOpenPurchaseOrderStatus(status) {
   return ['new', 'in_progress', 'picking', 'sent', 'draft'].includes(String(status || '').trim().toLowerCase());
 }
 
+function getCustomerOrderStatusLabel(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'new') return 'הזמנה חדשה';
+  if (normalized === 'in_progress') return 'בתהליך';
+  if (normalized === 'sent') return 'נשלח';
+  if (normalized === 'done') return 'הושלם';
+  return String(status || '--');
+}
+
+function getCustomerOrderStatusClass(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'new') return 'text-bg-danger';
+  if (normalized === 'in_progress') return 'text-bg-primary';
+  if (normalized === 'sent') return 'text-bg-warning';
+  if (normalized === 'done') return 'text-bg-success';
+  return 'text-bg-secondary';
+}
+
+function normalizeCustomerOrderStatusClient(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['new', 'in_progress', 'sent', 'done'].includes(normalized)) return normalized;
+  return 'new';
+}
+
 function syncSidebarActiveState() {
   const links = document.querySelectorAll('aside.manager-sidebar nav.manager-nav .manager-nav__link[href]');
   const currentPath = window.location.pathname.split('/').pop() || 'staff.html';
@@ -320,6 +362,18 @@ function renderStatusSelect(value, purchaseOrderId) {
       <option value="in_progress" ${normalizedValue === 'in_progress' ? 'selected' : ''}>בתהליך</option>
       <option value="picking" ${normalizedValue === 'picking' ? 'selected' : ''}>ליקוט</option>
       <option value="done" ${normalizedValue === 'done' ? 'selected' : ''}>בוצע</option>
+    </select>
+  `;
+}
+
+function renderCustomerOrderStatusSelect(value, orderId) {
+  const normalizedValue = normalizeCustomerOrderStatusClient(value);
+  return `
+    <select class="form-select form-select-sm" data-customer-order-status="${orderId}">
+      <option value="new" ${normalizedValue === 'new' ? 'selected' : ''}>הזמנה חדשה</option>
+      <option value="in_progress" ${normalizedValue === 'in_progress' ? 'selected' : ''}>בתהליך</option>
+      <option value="sent" ${normalizedValue === 'sent' ? 'selected' : ''}>נשלח</option>
+      <option value="done" ${normalizedValue === 'done' ? 'selected' : ''}>הושלם</option>
     </select>
   `;
 }
@@ -890,21 +944,47 @@ async function loadCustomerOrders() {
   applyCustomerOrdersFilters(true);
 }
 
-function renderCustomerOrders() {
-  if (!customerOrdersTableBody) return;
+function getCustomerOrdersFilteredItems() {
+  const searchTerm = String(customerOrdersSearchInput?.value || '').trim().toLowerCase();
+  return customerOrdersState.allItems.filter((order) => {
+    if (!searchTerm) return true;
+    return [
+      `#${order.id}`,
+      String(order.customerName || ''),
+      String(order.customerEmail || ''),
+      String(order.customerType || ''),
+      String(order.totalAmount || ''),
+      String(order.itemCount || ''),
+      String(order.status || ''),
+      String(order.staffNotes || ''),
+      formatDateTime(order.createdAt),
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+}
 
-  const { pageItems } = getPageItems(customerOrdersState.filteredItems, customerOrdersState);
+function renderCustomerOrderTable(tableBody, paginationEl, metaEl, pageInfoEl, state, statusFilter, emptyLabel) {
+  if (!tableBody) return;
+
+  const filteredItems = state.filteredItems.filter((order) => normalizeCustomerOrderStatusClient(order.status) === statusFilter);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / state.pageSize));
+  state.currentPage = Math.min(state.currentPage, totalPages);
+  const startIndex = (state.currentPage - 1) * state.pageSize;
+  const pageItems = filteredItems.slice(startIndex, startIndex + state.pageSize);
+
   if (!pageItems.length) {
-    customerOrdersTableBody.innerHTML = `
+    tableBody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-muted">אין הזמנות לקוחות התואמות לסינון הנוכחי.</td>
+        <td colspan="8" class="text-muted">${escapeHtml(emptyLabel)}</td>
       </tr>
     `;
-    renderPagination(customerOrdersPagination, customerOrdersState, customerOrdersPaginationMeta, customerOrdersPageInfo, 'הזמנות');
+    renderPagination(paginationEl, { ...state, filteredItems }, metaEl, pageInfoEl, 'הזמנות');
     return;
   }
 
-  customerOrdersTableBody.innerHTML = pageItems
+  tableBody.innerHTML = pageItems
     .map(
       (order) => `
         <tr>
@@ -920,36 +1000,122 @@ function renderCustomerOrders() {
             <span class="badge text-bg-light border">${escapeHtml(order.itemCount ?? 0)} פריטים</span>
           </td>
           <td>${formatMoney(order.totalAmount)}</td>
+          <td>
+            <span class="badge ${getCustomerOrderStatusClass(order.status)}">${getCustomerOrderStatusLabel(order.status)}</span>
+          </td>
+          <td>
+            ${renderCustomerOrderStatusSelect(order.status, order.id)}
+            <textarea class="form-control form-control-sm mt-2" rows="2" placeholder="הערות להזמנה" data-customer-order-notes="${order.id}">${escapeHtml(order.staffNotes || '')}</textarea>
+          </td>
           <td>${formatDateTime(order.createdAt)}</td>
+          <td>
+            <button type="button" class="btn btn-dark btn-sm" data-customer-order-save="${order.id}">שמור</button>
+          </td>
         </tr>
       `
     )
     .join('');
 
-  renderPagination(customerOrdersPagination, customerOrdersState, customerOrdersPaginationMeta, customerOrdersPageInfo, 'הזמנות');
+  bindCustomerOrderButtons();
+  renderPagination(paginationEl, { ...state, filteredItems }, metaEl, pageInfoEl, 'הזמנות');
+}
+
+function renderCustomerOrders() {
+  if (!customerOrdersTableBody) return;
+
+  const newOrdersState = customerOrdersPageStates.new;
+  const inProgressState = customerOrdersPageStates.in_progress;
+  const sentState = customerOrdersPageStates.sent;
+  const doneState = customerOrdersPageStates.done;
+
+  newOrdersState.filteredItems = customerOrdersState.filteredItems;
+  inProgressState.filteredItems = customerOrdersState.filteredItems;
+  sentState.filteredItems = customerOrdersState.filteredItems;
+  doneState.filteredItems = customerOrdersState.filteredItems;
+
+  renderCustomerOrderTable(
+    customerOrdersTableBody,
+    customerOrdersPagination,
+    customerOrdersPaginationMeta,
+    customerOrdersPageInfo,
+    newOrdersState,
+    'new',
+    'אין הזמנות חדשות התואמות לסינון הנוכחי.'
+  );
+  renderCustomerOrderTable(
+    customerOrdersInProgressTableBody,
+    customerOrdersInProgressPagination,
+    customerOrdersInProgressPaginationMeta,
+    customerOrdersInProgressPageInfo,
+    inProgressState,
+    'in_progress',
+    'אין הזמנות בתהליך.'
+  );
+  renderCustomerOrderTable(
+    customerOrdersSentTableBody,
+    customerOrdersSentPagination,
+    customerOrdersSentPaginationMeta,
+    customerOrdersSentPageInfo,
+    sentState,
+    'sent',
+    'אין הזמנות שנשלחו.'
+  );
+  renderCustomerOrderTable(
+    customerOrdersDoneTableBody,
+    customerOrdersDonePagination,
+    customerOrdersDonePaginationMeta,
+    customerOrdersDonePageInfo,
+    doneState,
+    'done',
+    'אין הזמנות שהושלמו.'
+  );
 }
 
 function applyCustomerOrdersFilters(resetPage = false) {
-  if (resetPage) customerOrdersState.currentPage = 1;
+  if (resetPage) {
+    customerOrdersState.currentPage = 1;
+    Object.values(customerOrdersPageStates).forEach((state) => {
+      state.currentPage = 1;
+    });
+  }
 
-  const searchTerm = String(customerOrdersSearchInput?.value || '').trim().toLowerCase();
-  customerOrdersState.filteredItems = customerOrdersState.allItems.filter((order) => {
-    if (!searchTerm) return true;
-    return [
-      `#${order.id}`,
-      String(order.customerName || ''),
-      String(order.customerEmail || ''),
-      String(order.customerType || ''),
-      String(order.totalAmount || ''),
-      String(order.itemCount || ''),
-      formatDateTime(order.createdAt),
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(searchTerm);
-  });
-
+  customerOrdersState.filteredItems = getCustomerOrdersFilteredItems();
   renderCustomerOrders();
+}
+
+async function updateCustomerOrder(orderId, status, notes) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/staff/customer-orders/${orderId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: authUser.id,
+        status,
+        notes,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update customer order');
+    }
+
+    setStatus('הזמנת הלקוח עודכנה בהצלחה.', 'success');
+    await loadCustomerOrders();
+  } catch (_err) {
+    setStatus('לא ניתן לעדכן את הזמנת הלקוח כרגע.', 'danger');
+  }
+}
+
+function bindCustomerOrderButtons() {
+  document.querySelectorAll('[data-customer-order-save]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const orderId = button.dataset.customerOrderSave;
+      const select = document.querySelector(`[data-customer-order-status="${orderId}"]`);
+      const notes = document.querySelector(`[data-customer-order-notes="${orderId}"]`);
+      if (!select || !notes) return;
+      updateCustomerOrder(orderId, select.value, notes.value);
+    });
+  });
 }
 
 async function startShift() {
@@ -1492,16 +1658,23 @@ function init() {
   if (customerOrdersSearchInput) {
     customerOrdersSearchInput.addEventListener('input', () => applyCustomerOrdersFilters(true));
   }
-  if (customerOrdersPagination) {
-    customerOrdersPagination.addEventListener('click', (event) => {
+  const customerOrdersPaginationTargets = [
+    [customerOrdersPagination, customerOrdersPageStates.new],
+    [customerOrdersInProgressPagination, customerOrdersPageStates.in_progress],
+    [customerOrdersSentPagination, customerOrdersPageStates.sent],
+    [customerOrdersDonePagination, customerOrdersPageStates.done],
+  ];
+  customerOrdersPaginationTargets.forEach(([container, state]) => {
+    if (!container) return;
+    container.addEventListener('click', (event) => {
       const target = event.target.closest('[data-page]');
       if (!target || target.disabled) return;
       const page = Number(target.dataset.page);
       if (!Number.isInteger(page) || page < 1) return;
-      customerOrdersState.currentPage = page;
+      state.currentPage = page;
       renderCustomerOrders();
     });
-  }
+  });
   if (workHoursReportFilterInput) {
     workHoursReportFilterInput.addEventListener('input', () => applyWorkHoursReportFilters(true));
   }

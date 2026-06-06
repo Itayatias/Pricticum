@@ -160,6 +160,14 @@ function normalizePurchaseOrderStatus(status) {
   return 'new';
 }
 
+function normalizeCustomerOrderStatus(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (['new', 'in_progress', 'sent', 'done'].includes(normalized)) {
+    return normalized;
+  }
+  return 'new';
+}
+
 app.post('/api/auth/register', async (req, res) => {
   const { fullName, email, password } = req.body || {};
 
@@ -390,10 +398,12 @@ app.post('/api/cart/checkout', (req, res) => {
           }
 
           const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+          const initialStatus = normalizeCustomerOrderStatus('new');
 
           db.run(
-            'INSERT INTO orders (user_id, total_amount) VALUES (?, ?)',
-            [numericUserId, total],
+            `INSERT INTO orders (user_id, total_amount, status, staff_notes)
+             VALUES (?, ?, ?, ?)`,
+            [numericUserId, total, initialStatus, ''],
             function onOrderInsert(orderErr) {
               if (orderErr) return res.status(500).json({ message: 'Failed to create order' });
 
@@ -441,7 +451,7 @@ app.post('/api/cart/checkout', (req, res) => {
 
                           return res.status(201).json({
                             message: 'Checkout completed successfully',
-                            order: { id: orderId, userId: numericUserId, totalAmount: total, items },
+                            order: { id: orderId, userId: numericUserId, totalAmount: total, status: initialStatus, staffNotes: '', items },
                           });
                         });
                       }
@@ -464,7 +474,7 @@ app.get('/api/orders/:userId', (req, res) => {
   }
 
   db.all(
-    `SELECT id, total_amount AS totalAmount, created_at AS createdAt
+    `SELECT id, total_amount AS totalAmount, status, staff_notes AS staffNotes, created_at AS createdAt, updated_at AS updatedAt
      FROM orders
      WHERE user_id = ?
      ORDER BY id DESC`,
@@ -496,6 +506,7 @@ app.get('/api/orders/:userId', (req, res) => {
           const payload = orders.map((order) => ({
             ...order,
             items: itemsByOrderId[order.id] || [],
+            status: normalizeCustomerOrderStatus(order.status),
           }));
 
           return res.json(payload);
@@ -546,7 +557,10 @@ app.get('/api/staff/customer-orders', async (req, res) => {
     db.all(
       `SELECT o.id,
               o.total_amount AS totalAmount,
+              o.status,
+              o.staff_notes AS staffNotes,
               o.created_at AS createdAt,
+              o.updated_at AS updatedAt,
               u.full_name AS customerName,
               u.email AS customerEmail,
               u.customer_type AS customerType,
@@ -559,7 +573,51 @@ app.get('/api/staff/customer-orders', async (req, res) => {
       [],
       (err, rows) => {
         if (err) return res.status(500).json({ message: 'Failed to fetch customer orders' });
-        return res.json(rows);
+        return res.json(rows.map((row) => ({
+          ...row,
+          status: normalizeCustomerOrderStatus(row.status),
+          staffNotes: row.staffNotes || '',
+        })));
+      }
+    );
+  } catch (_err) {
+    return res.status(500).json({ message: 'Failed to verify access' });
+  }
+});
+
+app.post('/api/staff/customer-orders/:id', async (req, res) => {
+  const userId = Number(req.body?.userId);
+  const orderId = Number(req.params.id);
+  const status = normalizeCustomerOrderStatus(req.body?.status);
+  const staffNotes = String(req.body?.notes ?? '').trim();
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({ message: 'Valid userId is required' });
+  }
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({ message: 'Valid order id is required' });
+  }
+
+  try {
+    const user = await getUserById(userId);
+    if (!user || !['employee', 'manager'].includes(user.role)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    db.run(
+      `UPDATE orders
+       SET status = ?, staff_notes = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [status, staffNotes, orderId],
+      function onUpdate(err) {
+        if (err) return res.status(500).json({ message: 'Failed to update customer order' });
+        if (this.changes === 0) return res.status(404).json({ message: 'Order not found' });
+        return res.json({
+          message: 'Customer order updated successfully',
+          orderId,
+          status,
+          staffNotes,
+        });
       }
     );
   } catch (_err) {

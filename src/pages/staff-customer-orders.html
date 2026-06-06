@@ -71,8 +71,8 @@
         <section class="manager-panel manager-panel--orders">
           <div class="manager-panel__header">
             <div>
-              <h3 class="manager-panel__title">טבלת הזמנות לקוחות</h3>
-              <p class="manager-panel__subtitle mb-0">רשימת ההזמנות שבוצעו באתר, עם חיפוש וניווט בין עמודים.</p>
+              <h3 class="manager-panel__title">הזמנות חדשות</h3>
+              <p class="manager-panel__subtitle mb-0">כאן מופיעות ההזמנות שזה עתה התקבלו. ניתן לעדכן סטטוס ולהוסיף הערות.</p>
             </div>
           </div>
 
@@ -96,7 +96,10 @@
                   <th>לקוח</th>
                   <th>פריטים</th>
                   <th>סה״כ</th>
+                  <th>סטטוס</th>
+                  <th>הערות</th>
                   <th>תאריך</th>
+                  <th>פעולה</th>
                 </tr>
               </thead>
               <tbody id="staffCustomerOrdersTable"></tbody>
@@ -106,6 +109,96 @@
           <div class="inventory-pagination">
             <div id="staffCustomerOrdersPaginationMeta" class="inventory-pagination__meta">--</div>
             <div id="staffCustomerOrdersPagination" class="inventory-pagination__controls"></div>
+          </div>
+        </section>
+
+        <section class="manager-panel manager-panel--orders mt-4">
+          <div class="manager-panel__header">
+            <div>
+              <h3 class="manager-panel__title">הזמנות בתהליך</h3>
+              <p class="manager-panel__subtitle mb-0">הזמנות שעובדים כבר מטפלים בהן.</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle manager-table mb-0">
+              <thead>
+                <tr>
+                  <th>הזמנה</th>
+                  <th>לקוח</th>
+                  <th>פריטים</th>
+                  <th>סה״כ</th>
+                  <th>סטטוס</th>
+                  <th>הערות</th>
+                  <th>תאריך</th>
+                  <th>פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="staffCustomerOrdersInProgressTable"></tbody>
+            </table>
+          </div>
+          <div class="inventory-pagination">
+            <div id="staffCustomerOrdersInProgressPaginationMeta" class="inventory-pagination__meta">--</div>
+            <div id="staffCustomerOrdersInProgressPagination" class="inventory-pagination__controls"></div>
+          </div>
+        </section>
+
+        <section class="manager-panel manager-panel--orders mt-4">
+          <div class="manager-panel__header">
+            <div>
+              <h3 class="manager-panel__title">הזמנות שנשלחו</h3>
+              <p class="manager-panel__subtitle mb-0">הזמנות שכבר יצאו ללקוח או בדרך אליו.</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle manager-table mb-0">
+              <thead>
+                <tr>
+                  <th>הזמנה</th>
+                  <th>לקוח</th>
+                  <th>פריטים</th>
+                  <th>סה״כ</th>
+                  <th>סטטוס</th>
+                  <th>הערות</th>
+                  <th>תאריך</th>
+                  <th>פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="staffCustomerOrdersSentTable"></tbody>
+            </table>
+          </div>
+          <div class="inventory-pagination">
+            <div id="staffCustomerOrdersSentPaginationMeta" class="inventory-pagination__meta">--</div>
+            <div id="staffCustomerOrdersSentPagination" class="inventory-pagination__controls"></div>
+          </div>
+        </section>
+
+        <section class="manager-panel manager-panel--orders mt-4">
+          <div class="manager-panel__header">
+            <div>
+              <h3 class="manager-panel__title">הזמנות שהושלמו</h3>
+              <p class="manager-panel__subtitle mb-0">הזמנות שסומנו כהושלמו וסיימו את התהליך.</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle manager-table mb-0">
+              <thead>
+                <tr>
+                  <th>הזמנה</th>
+                  <th>לקוח</th>
+                  <th>פריטים</th>
+                  <th>סה״כ</th>
+                  <th>סטטוס</th>
+                  <th>הערות</th>
+                  <th>תאריך</th>
+                  <th>פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="staffCustomerOrdersDoneTable"></tbody>
+            </table>
+          </div>
+          <div class="inventory-pagination">
+            <div id="staffCustomerOrdersDonePaginationMeta" class="inventory-pagination__meta">--</div>
+            <div id="staffCustomerOrdersDonePagination" class="inventory-pagination__controls"></div>
           </div>
         </section>
       </main>
